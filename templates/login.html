@@ -1,0 +1,104 @@
+﻿<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" >
+        <title>租房网 - 用户登录</title>
+        <link rel="stylesheet" href="/static/css/style.css">
+        <link rel="stylesheet" href="/static/css/head.css">
+    </head>
+    <body>
+        {% include 'header.html' %}
+        <div id="regLogin" class="wrap">
+            <div class="dialog">
+                <div class="box">
+                    <h4>用户登录</h4>
+                    <form id="loginForm" action="" method="post">
+                        {% csrf_token %}
+                         <div class="infos">
+                            <table class="field">
+                                <tr>
+                                    <td class="field"><label for="username">用 户 名：</label></td>
+                                    <td>
+                                        <input id="username" type="text" class="text" v-model="form.username" name="username" placeholder="名字或电话或邮箱">
+                                        <span id="uerror"></span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="field"><label for="password">密 码：</label></td>
+                                    <td>
+                                        <input id="password" type="password" class="text" v-model="form.password" name="password" placeholder="请输入密码">
+                                        <span id="perror"></span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="field"><label for="captcha">验 证 码：</label></td>
+                                    <td>
+                                        <input id="captcha" type="text" class="text" name="captcha">
+                                        <img id="captchaImage" src="/captcha/" width="80" height="30">
+                                    </td>
+                                </tr>
+                            </table>
+                            <div class="buttons">
+                                <input type="button" value="立即登录" @click="onLogin">
+                                <input id="regBtn" type="button" value="快速注册" >
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% include 'footer.html' %}
+        <script src="https://cdn.bootcss.com/vuex/3.0.1/vuex.min.js"></script>
+        <script>
+
+            const loginform = new Vue({
+                el: "#loginForm",
+                data:{
+                    url: 'http://127.0.0.1:8000/',
+                    form: {
+                        username: null,
+                        password: null
+                    },
+                    code:null,
+                    message: null
+                },
+                methods:{
+                    onLogin(){
+                        let formData = JSON.stringify(this.form);
+                        fetch(this.url + "api/token/", {
+                            method:"POST",
+                            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json'},
+                            body: formData
+                        }).then(resp => resp.json()).then(json => {
+                            if (json.code == 200001){
+                                let token = json.token;
+                                let date = new Date();
+                                date.setTime(date.getTime() + (1000 * 86400));
+                                let expires = "; expires=" + date.toGMTString();
+                                document.cookie = "token=" + token + expires + "; path=/";
+                                location.href = '/rent/index'
+                            }
+                            else {
+                                alert(json.message)
+                            }
+                        });
+                    },
+
+                }
+            });
+
+            $(() => {
+                $('#captchaImage').on('click', (evt) => {
+                    $(evt.target).attr('src', '/captcha/?' + Math.random())
+                })
+            });
+            $(function() {
+                $('#regBtn').on('click', function() {
+                    location.href = '/rent/register';
+                });
+            });
+        </script>
+    </body>
+</html>
+
+

@@ -1,0 +1,260 @@
+﻿<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>租房网 - 首页</title>
+		<link rel="stylesheet" href="/static/css/style.css">
+        <link rel="stylesheet" href="/static/css/head.css">
+
+	</head>
+	<body>
+        {% include 'header.html' %}
+        <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+        <div id="navbar" class="wrap">
+            {% verbatim %}
+			<div id="app2" class="search clearfix" @change="search()" >
+                <div class="fl">
+					<ul>
+						<li class="first" >房屋位置</li>
+						<li>
+							省
+							<select v-model="provId" @change="selectProv" >
+								<option value="0">请选择</option>
+								<option v-for="prov in provinces" :value="prov.distid">{{ prov.name }}</option>
+							</select>
+							市
+							<select v-model.number="cityId" @change="selectCity">
+								<option value="0">请选择</option>
+								<option v-for="city in cities" :value="city.distid">{{ city.name }}</option>
+							</select>
+							区
+							<select v-model.number="countyId">
+								<option value="0">请选择</option>
+								<option v-for="county in counties" :value="county.distid">{{ county.name }}</option>
+							</select>
+						</li>
+					</ul>
+				</div>
+				<div class="fl">
+					<ul>
+						<li class="first">价格</li>
+						<li>
+							<select v-model="price">
+								<option value="0-999999999">不限</option>
+								<option value="0-1000">1000元以下</option>
+								<option value="1000-2000">1000元-2000元</option>
+								<option value="2000-3000">2000元—3000元</option>
+								<option value="3000-5000">3000元—5000元</option>
+								<option value="5000-10000">5000元—10000元</option>
+								<option value="10000-20000">10000元—20000元</option>
+								<option value="20000-50000">20000元—50000元</option>
+								<option value="50000-999999999">50000元以上</option>
+							</select>
+						</li>
+					</ul>
+				</div>
+				<div class="fl">
+					<ul>
+						<li class="first">房型</li>
+						<li>
+							<select v-model.number="housetype">
+								<option value="0">不限</option>
+								<option v-for="type in housetypes" :value="type.typeid">{{ type.name }}</option>
+							</select>
+						</li>
+					</ul>
+				</div>
+				<div class="fl">
+					<ul>
+						<li class="first">面积</li>
+						<li>
+							<select v-model="area">
+								<option value="0-99999999">不限</option>
+								<option value="0-50">50平米以下</option>
+								<option value="50-100">50-100平米</option>
+								<option value="100-200">100-200平米</option>
+								<option value="200-99999999">200平米以上</option>
+							</select>
+						</li>
+					</ul>
+				</div>
+                <div class="fl">
+					<ul>
+						<li class="bold">房屋信息</li>
+						<li>标题：
+							<input type="text" class="text" v-model="title" @keydown.enter="search()">
+                            <label class="ui-blue">
+                            <input type="submit" name="search" value="搜索房屋">
+						</label>
+						</li>
+					</ul>
+				</div>
+			</div>
+            {% endverbatim %}
+		</div>
+        {% verbatim %}
+		<div id="app" class="main wrap">
+			<table class="house-list">
+				<tr v-for="house in houseinfos">
+					<td class="house-thumb">
+						<div>
+							<img :src="house.mainphoto" width="160" height="120" alt="">
+							<span class="count">图</span>
+						</div>
+					</td>
+					<td>
+						<dl>
+							<dt>
+
+								<a :href="'/rent/houseinfo/' + house.houseid">{{ house.title }}</a>
+							</dt>
+							<dd>
+								{{ house.district.name }}&nbsp;{{ house.street }}&nbsp;
+								{{ house.area }}平米&nbsp;{{ house.floor }}层/{{ house.totalfloor }}层 <br>
+							</dd>
+							<dd>
+								<span v-for="tag in house.tags" class="house-tag">{{ tag.content }}</span>
+							</dd>
+						</dl>
+					</td>
+					<td class="house-type">{{ house.type.name }}</td>
+					<td class="house-price"><span>{{ house.price }}</span>{{ house.priceunit }}</td>
+				</tr>
+			</table>
+			<el-pagination id="pages"
+                layout="prev, pager, next"
+                page-size="5"
+                :total="count"
+                @current-change="handleCurrentChange"
+                @prev-click="loadData(prevPage)"
+                @next-click="loadData(nextPage)">
+            </el-pagination>
+		</div>
+		{% endverbatim %}
+        {% include 'footer.html' %}
+        <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+		<script>
+			const app1 = new Vue({
+				el: '#app',
+				data: {
+				    houseinfos: [],
+                    url: '/api/houseinfos/',
+                    district:510100,
+				    count: 0,
+                    nextPage: null,
+                    prevPage: null,
+				},
+				created() {
+					fetch(this.url + '?' + district)
+						.then(resp => resp.json())
+						.then(json => {
+							this.houseinfos = json.results
+						});
+
+                    this.loadData(this.url)
+				},
+                methods: {
+                    handleCurrentChange(currentPage) {
+                        this.loadData('/api/houseinfos/?page=' + currentPage)
+                    },
+                    loadData(url) {
+                        if (url) {
+                            fetch(url)
+                                .then(resp => resp.json())
+                                .then(json => {
+                                    this.houseinfos = json.results;
+                                    this.count = json.count;
+                                    this.nextPage = json.next;
+                                    this.prevPage = json.previous;
+                                })
+                        }
+                    }
+                },
+			})
+		</script>
+		<script>
+			const app2 = new Vue({
+				el: '#app2',
+				data: {
+					provinces: [],
+					cities: [],
+					counties: [],
+					housetypes: [],
+					title: '',
+					price: '0-999999999',
+					provId: 0,
+					cityId: 0,
+					countyId: 0,
+					housetype: 0,
+                    url: 'http://127.0.0.1:8000/',
+					area: '0-99999999'
+				},
+				created() {
+					fetch('/api/districts/')
+						.then(resp => resp.json())
+						.then(json => this.provinces = json.results)
+                    fetch('/api/housetypes/')
+                            .then(resp => resp.json())
+                            .then(json => this.housetypes = json.results )
+				},
+				methods: {
+					selectProv() {
+						this.cities = [];
+						this.cityId = 0;
+						this.counties = [];
+						this.countyId = 0;
+						fetch('/api/districts/' + this.provId)
+							.then(resp => resp.json())
+							.then(json => this.cities = json.cities)
+					},
+					selectCity() {
+						this.counties = [];
+						this.countyId = 0;
+						fetch('/api/districts/' + this.cityId)
+							.then(resp => resp.json())
+							.then(json => this.counties = json.cities)
+					},
+                    search() {
+					    if (this.cityId != 0) {
+                            url = this.url + 'api/houseinfos/?';
+                            var title = this.title.trim();
+                            if (title.length > 0) {
+                                url += `title=${title}&`
+                            }
+                            var prices = this.price.split('-');
+                            minprice = prices[0];
+                            maxprice = prices[1];
+                            url += `minprice=${minprice}&maxprice=${maxprice}&`;
+
+                            var area = this.area.split('-');
+                            minarea = area[0];
+                            maxarea = area[1];
+                            url += `minarea=${minarea}&maxarea=${maxarea}&`;
+
+                            var housetype = this.housetype;
+                            if (housetype > 0) {
+                                url += `housetype=${housetype}&`
+                            }
+
+                            if (this.countyId != 0) {
+                                url += `district=${this.countyId}`
+                            } else {
+                                url += `district=${this.cityId}`
+                            }
+
+                            fetch(url)
+                                .then(resp => resp.json())
+                                .then(json => {
+                                    app1.houseinfos = json.results;
+                                    app1.count = json.count;
+                                    app1.nextPage = json.nextPage;
+                                    app1.prevPage = json.prevPage;
+                                })
+                        }
+
+                    },
+				}
+			})
+		</script>
+	</body>
+</html>

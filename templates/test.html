@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>前后端联调测试</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+</head>
+<body>
+    <h1>前后端代码联调 - Vue + Element UI</h1>
+    <hr>
+    <div id="app1">
+        <el-select v-model="provId" filterable placeholder="请选择" @change="selectProv">
+            <el-option
+                    v-for="prov in provinces"
+                    :key="prov.distid"
+                    :label="prov.name"
+                    :value="prov.distid">
+            </el-option>
+        </el-select>
+        <el-select v-model="cityId" filterable placeholder="请选择" @change="selectCity">
+            <el-option
+                    v-for="city in cities"
+                    :key="city.distid"
+                    :label="city.name"
+                    :value="city.distid">
+            </el-option>
+        </el-select>
+        <el-select v-model="countyId" filterable placeholder="请选择">
+            <el-option
+                    v-for="county in counties"
+                    :key="county.distid"
+                    :label="county.name"
+                    :value="county.distid">
+            </el-option>
+        </el-select>
+    </div>
+    <div id="app2">
+        <el-table :data="agents" style="width: 60%">
+            <el-table-column
+                    prop="agentid"
+                    label="编号"
+                    width="80">
+            </el-table-column>
+            <el-table-column
+                    prop="name"
+                    label="姓名"
+                    width="180">
+            </el-table-column>
+            <el-table-column
+                    prop="tel"
+                    label="电话"
+                    width="180">
+            </el-table-column>
+            <el-table-column
+                    prop="servstar"
+                    label="服务星级"
+                    width="280">
+                <el-template slot-scope="scope">
+                    <el-rate
+                            disabled
+                            v-model="scope.row.servstar"
+                            :colors="['#ffc0c0', '#ffa0a0', '#ff0000']">
+                    </el-rate>
+                </el-template>
+            </el-table-column>
+        </el-table>
+        <el-pagination
+                layout="prev, pager, next"
+                page-size="5"
+                :total="count"
+                @current-change="handleCurrentChange"
+                @prev-click="loadData(prevPage)"
+                @next-click="loadData(nextPage)">
+        </el-pagination>
+    </div>
+    <script src="https://cdn.bootcss.com/vue/2.6.11/vue.min.js"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script>
+        const app1 = new Vue({
+            el: '#app1',
+            data: {
+                provId: null,
+                provinces: [],
+                cityId: null,
+                cities: [],
+                countyId: null,
+                counties: []
+            },
+            created() {
+                fetch('/api/districts/')
+                    .then(resp => resp.json())
+                    .then(json => this.provinces = json.results)
+            },
+            methods: {
+                selectProv() {
+                    this.cities = []
+                    this.cityId = null
+                    this.counties = []
+                    this.countyId = null
+                    fetch('/api/districts/' + this.provId)
+                        .then(resp => resp.json())
+                        .then(json => this.cities = json.cities)
+                },
+                selectCity() {
+                    this.counties = []
+                    this.countyId = null
+                    fetch('/api/districts/' + this.cityId)
+                        .then(resp => resp.json())
+                        .then(json => this.counties = json.cities)
+                }
+            }
+        })
+    </script>
+    <script>
+        const app2 = new Vue({
+            el: '#app2',
+            data: {
+                count: 0,
+                agents: [],
+                nextPage: null,
+                prevPage: null,
+            },
+            created() {
+                this.loadData('/api/agents/')
+            },
+            methods: {
+                handleCurrentChange(currentPage) {
+                    this.loadData('/api/agents/?page=' + currentPage)
+                },
+                loadData(url) {
+                    if (url) {
+                        fetch(url)
+                            .then(resp => resp.json())
+                            .then(json => {
+                                this.agents = json.results
+                                this.count = json.count
+                                this.nextPage = json.next
+                                this.prevPage = json.previous
+                            })
+                    }
+                }
+            }
+        })
+    </script>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>租房网 - 首页</title>
+		<link rel="stylesheet" href="/static/css/style.css">
+        <link rel="stylesheet" href="/static/css/head.css">
+
+	</head>
+	<body>
+        {% include 'header.html' %}
+        <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+        {% verbatim %}
+		<div id="app" class="main wrap">
+			<table class="house-list">
+				<tr v-for="house in houseinfos">
+					<td class="house-thumb">
+						<div>
+							<img :src="house.mainphoto" width="160" height="120" alt="">
+							<span class="count">图</span>
+						</div>
+					</td>
+					<td>
+						<dl>
+							<dt>
+								<a href=house.title>{{ house.title }}</a>
+							</dt>
+							<dd>
+								{{ house.district.name }}&nbsp;{{ house.street }}&nbsp;
+								{{ house.area }}平米&nbsp;{{ house.floor }}层/{{ house.totalfloor }}层 <br>
+							</dd>
+							<dd>
+								<span v-for="tag in house.tags" class="house-tag">{{ tag.content }}</span>
+							</dd>
+						</dl>
+					</td>
+					<td class="house-type">{{ house.type.name }}</td>
+					<td class="house-price"><span>{{ house.price }}</span>{{ house.priceunit }}</td>
+				</tr>
+
+			</table>
+            <div>
+                <a href="/rent/index">首页</a>
+            </div>
+		</div>
+		{% endverbatim %}
+        {% include 'footer.html' %}
+        <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+		<script>
+            const app = new Vue({
+				el: '#app',
+				data: {
+					houseinfos: [],
+				},
+				created() {
+				    let a = window.location.pathname;
+                    let str = a.split('/');
+                    let houseid = str.pop();
+					fetch('/api/houseinfos/' + houseid  )
+						.then(resp => resp.json())
+						.then(json => {
+							this.houseinfos = json.results
+						});
+                    console.log(this.houseinfos)
+				},
+			})
+		</script>
+	</body>
+</html>

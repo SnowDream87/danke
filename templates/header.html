@@ -1,0 +1,56 @@
+{% load staticfiles %}
+<div id="header" class="wrap">
+    <div id="logo">
+        <img src="/static/images/logo.png" width="160" height="40">
+    </div>
+        {% verbatim %}
+        <div id="headbar">
+            <a href="/rent/userinfo" v-if="block">{{ realName }}</a>
+            <a href="/rent/login" v-else>用户登录</a>
+            <a href="" v-if="block" @click="clearCookie">退出登录</a>
+            <a href="/rent/register" v-else>用户注册</a>
+            <div class="pub">
+                <a href="/rent/publish" v-if="block">发布房源</a>
+                <a href="/rent/login" v-else>发布房源</a>
+            </div>
+        </div>
+        {% endverbatim %}
+    </div>
+</div>
+<script src="https://cdn.bootcss.com/vue/2.6.10/vue.min.js"></script>
+<script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+<script>
+    const header = new Vue({
+        el: '#header',
+        data:{
+            block: false,
+            realName: null
+        },
+        created(){
+            let token = $.cookie('token');
+            if (token){
+                let usesinfo = token.split('.')[1];
+                let a = window.atob(usesinfo);
+                this.realName = JSON.parse(a).data.realname;
+                this.block = true;
+            }
+            else {
+                this.block = false
+            }
+        },
+        methods:{
+            setCookie(days){
+                let token = $.cookie('token');
+                let date = new Date();
+                date.setTime(date.getTime()+(1000 * 86400 * days));
+                let expires = "; expires="+date.toGMTString();
+                document.cookie = "token=" + token + expires + "; path=/";
+            },
+            clearCookie(){
+                this.setCookie(-1)
+            },
+        }
+    })
+</script>
+

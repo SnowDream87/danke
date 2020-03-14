@@ -1,0 +1,118 @@
+﻿<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>租房网 - 用户注册</title>
+		<link rel="stylesheet" href="/static/css/style.css">
+        <link rel="stylesheet" href="/static/css/head.css">
+    </head>
+	<body>
+		{% include 'header.html' %}
+		<div id="regLogin" class="wrap">
+			<div class="dialog">
+				<dl class="clearfix">
+					<dt>新用户注册</dt>
+					<dd class="past">填写个人信息</dd>
+				</dl>
+				<div class="box">
+					<form id="registerForm" action="" method="post">
+                        {% csrf_token %}
+						<div class="infos">
+							<table class="field">
+								<tr>
+									<td class="field">用 户 名：</td>
+									<td>
+										<input id="username" type="text" class="text" v-model="form.username" name="username">
+									</td>
+								</tr>
+								<tr>
+									<td class="field">密 码：</td>
+									<td>
+                                        <input type="password" class="text" v-model="form.password" name="password">
+                                    </td>
+								</tr>
+								<tr>
+									<td class="field">真实姓名：</td>
+									<td>
+                                        <input type="text" class="text" v-model="form.realname" name="realname">
+                                    </td>
+								</tr>
+								<tr>
+									<td class="field">电子邮箱：</td>
+									<td>
+                                        <input type="email" class="text" v-model="form.email" name="email">
+                                    </td>
+								</tr>
+								<tr>
+									<td class="field">手 机 号：</td>
+									<td>
+                                        <input type="tel" class="text" v-model="form.tel" name="tel">
+                                        <input id="codeBtn" type="button" value="获取验证码" @click="getCode">
+                                    </td>
+								</tr>
+                                <tr>
+									<td class="field">验 证 码：</td>
+									<td>
+                                        <input type="text" class="text" v-model="form.code" name="code">
+                                    </td>
+								</tr>
+							</table>
+							<div class="buttons">
+								<input type="button" value="立即注册" @click="onRegister">
+                                <input id="backBtn" type="button" value="返回登录">
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+		{% include 'footer.html' %}
+		</div>
+		<script>
+            const regLogin = new Vue({
+                el: '#registerForm',
+                data:{
+                    url: 'http://127.0.0.1:8000/',
+                    form: {
+                        username: null,
+                        password: null,
+                        realname: null,
+                        email: null,
+                        tel: null,
+                        code: null,
+                    },
+                    formLogin:{
+                        tel: null,
+                        password: null,
+                    },
+                },
+                methods:{
+                    getCode(){
+                        fetch(this.url + 'api/mobile/' + this.form.tel)
+                            .then(resp => resp.json())
+                            .then(json => {
+                                if (json.code != 100001) {
+                                    alert(json.message)
+                                }
+                            });
+                    },
+                    onRegister(){
+                        let formData = JSON.stringify(this.form);
+                        fetch(this.url + "api/users/", {
+                            method:"POST",
+                            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json'},
+                            body: formData
+                        }).then(resp => resp.json()).then(json => {
+                            if (this.json.code == 2000){
+                                alert(json.message)
+                            }
+                            else {
+                                alert(json.message)
+                            }
+                        });
+                    }
+                }
+            })
+		</script>
+	</body>
+</html>
