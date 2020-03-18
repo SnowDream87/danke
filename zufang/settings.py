@@ -38,16 +38,16 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework_swagger',
-    # 'debug_toolbar',
-    # 'rest_framework',
-    # 'django_filters',
+    'debug_toolbar',
+    'rest_framework',
+    'django_filters',
     'common',
     'api',
     'rent'
 ]
 
 MIDDLEWARE = [
-    # 'debug_toolbar.middleware.DebugToolbarMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -143,7 +143,7 @@ CORS_ALLOW_METHODS = (
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'zufang',
+        'NAME': 'danke',
         'HOST': '120.27.241.198',
         'PORT': 3306,
         'USER': 'root',

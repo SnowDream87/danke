@@ -7,7 +7,7 @@ from django_redis import get_redis_connection
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from common.models import District, Agent, Estate, HouseType, HouseInfo, HousePhoto, Tag, Role, User, UserRole
+from common.models import District, Agent, HouseType, HouseInfo, HousePhoto, Tag, Role, User, UserRole
 from common.utils import to_md5_hex
 from common.validators import *
 
@@ -54,40 +54,14 @@ class AgentCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Agent
-        exclude = ('estates', )
+        fields = '__all__'
 
 
 class AgentDetailSerializer(serializers.ModelSerializer):
     """经理人详情序列化器"""
-    estates = serializers.SerializerMethodField()
-
-    @staticmethod
-    def get_estates(agent):
-        queryset = agent.estates.all()[:5]
-        return EstateSimpleSerializer(queryset, many=True).data
 
     class Meta:
         model = Agent
-        fields = '__all__'
-
-
-class EstateSimpleSerializer(serializers.ModelSerializer):
-    """楼盘简单序列化器"""
-
-    class Meta:
-        model = Estate
-        fields = ('estateid', 'name')
-
-
-class EstateDetailSerializer(serializers.ModelSerializer):
-    district = serializers.SerializerMethodField()
-
-    @staticmethod
-    def get_district(estate):
-        return DistrictSimpleSerializer(estate.district).data
-
-    class Meta:
-        model = Estate
         fields = '__all__'
 
 
@@ -121,6 +95,7 @@ class HouseInfoSimpleSerializer(serializers.ModelSerializer):
     district = serializers.SerializerMethodField()
     type = serializers.SerializerMethodField()
     tags = serializers.SerializerMethodField()
+    user = serializers.SerializerMethodField()
 
     @staticmethod
     def get_mainphoto(houseinfo):
@@ -138,10 +113,14 @@ class HouseInfoSimpleSerializer(serializers.ModelSerializer):
     def get_tags(houseinfo):
         return TagsSerializer(houseinfo.tags, many=True).data
 
+    @staticmethod
+    def get_user(houseinfo):
+        return UserVerySimpleSerializer(houseinfo.user).data
+
     class Meta:
         model = HouseInfo
         fields = ('houseid', 'title', 'area', 'floor', 'totalfloor', 'price', 'priceunit',
-                  'mainphoto', 'street', 'district', 'type', 'tags')
+                  'mainphoto', 'street', 'district', 'type', 'tags', 'user')
 
 
 class HouseInfoCrateSerializer(serializers.ModelSerializer):
@@ -158,7 +137,6 @@ class HouseInfoDetailSerializer(serializers.ModelSerializer):
     district = serializers.SerializerMethodField()
     type = serializers.SerializerMethodField()
     tags = serializers.SerializerMethodField()
-    estate = serializers.SerializerMethodField()
     agent = serializers.SerializerMethodField()
     mainphoto = serializers.SerializerMethodField()
 
@@ -184,10 +162,6 @@ class HouseInfoDetailSerializer(serializers.ModelSerializer):
         return TagsSerializer(houseinfo.tags, many=True).data
 
     @staticmethod
-    def get_estate(houseinfo):
-        return EstateSimpleSerializer(houseinfo.estate).data
-
-    @staticmethod
     def get_agent(houseinfo):
         return AgentSimpleSerializer(houseinfo.agent).data
 
@@ -204,12 +178,20 @@ class RoleSimpleSerializer(serializers.ModelSerializer):
         fields = ('roleid', )
 
 
+class UserVerySimpleSerializer(serializers.ModelSerializer):
+    """用户简单序列化器"""
+
+    class Meta:
+        model = User
+        fields = ('realname', 'userid')
+
+
 class UserSimpleSerializer(serializers.ModelSerializer):
     """用户简单序列化器"""
 
     class Meta:
         model = User
-        exclude = ('password', 'roles')
+        exclude = ('password', 'roles', 'status')
 
 
 class UserUpdateSerializer(serializers.ModelSerializer):

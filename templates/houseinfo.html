@@ -5,13 +5,13 @@
 		<title>租房网 - 首页</title>
 		<link rel="stylesheet" href="/static/css/style.css">
         <link rel="stylesheet" href="/static/css/head.css">
-
+        <link rel="stylesheet" href="/static/css/add_style.css">
 	</head>
 	<body>
         {% include 'header.html' %}
         <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
         {% verbatim %}
-		<div id="app" class="main wrap">
+		<div id="app" v-cloak class="main wrap">
 			<table class="house-list">
 				<tr v-for="house in houseinfos">
 					<td class="house-thumb">
@@ -56,7 +56,7 @@
 				    let a = window.location.pathname;
                     let str = a.split('/');
                     let houseid = str.pop();
-					fetch('/api/houseinfos/' + houseid  )
+					fetch('/api/houseinfos/' + houseid)
 						.then(resp => resp.json())
 						.then(json => {
 							this.houseinfos = json.results

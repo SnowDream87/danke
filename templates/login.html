@@ -5,6 +5,7 @@
         <title>租房网 - 用户登录</title>
         <link rel="stylesheet" href="/static/css/style.css">
         <link rel="stylesheet" href="/static/css/head.css">
+        <link rel="stylesheet" href="/static/css/add_style.css">
     </head>
     <body>
         {% include 'header.html' %}
@@ -54,7 +55,7 @@
             const loginform = new Vue({
                 el: "#loginForm",
                 data:{
-                    url: 'http://127.0.0.1:8000/',
+                    url: '/api/token/',
                     form: {
                         username: null,
                         password: null
@@ -65,7 +66,8 @@
                 methods:{
                     onLogin(){
                         let formData = JSON.stringify(this.form);
-                        fetch(this.url + "api/token/", {
+                        console.log(formData);
+                        fetch(this.url, {
                             method:"POST",
                             headers: { 'Accept': 'application/json', 'Content-Type': 'application/json'},
                             body: formData

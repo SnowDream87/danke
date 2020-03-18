@@ -5,6 +5,7 @@
 		<title>租房网 - 发布房屋信息</title>
 		<link rel="stylesheet" href="/static/css/style.css">
         <link rel="stylesheet" href="/static/css/head.css">
+        <link rel="stylesheet" href="/static/css/add_style.css">
 	</head>
 	<body>
         {% include 'header.html' %}
@@ -16,17 +17,18 @@
 				</dl>
 				<div class="box">
 					<form action="" method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
                         {% verbatim %}
 						<div class="infos">
 							<table class="field">
 								<tr>
 									<td class="field">标 题：</td>
-									<td><input type="text" class="text" name="title"></td>
+									<td><input type="text" class="text"  v-model="houseData.title" name="title"></td>
 								</tr>
 								<tr>
 									<td class="field">户 型：</td>
 									<td>
-										<select v-model.number="housetype">
+										<select v-model.number="houseData.type_id">
                                             <option value="0">不限</option>
                                             <option v-for="type in housetypes" :value="type.typeid">{{ type.name }}</option>
                                         </select>
@@ -34,25 +36,38 @@
 								</tr>
 								<tr>
 									<td class="field">面 积：</td>
-									<td><input type="number" class="mtext" name="area"></td>
+									<td><input type="number" class="mtext"  v-model="houseData.area" name="area"></td>
 								</tr>
 								<tr>
 									<td class="field">楼 层：</td>
 									<td>
-										<input type="number" class="stext" name="floor" maxlength="3">
+										<input type="number" class="stext" name="floor"  v-model="houseData.floor" maxlength="3">
 										/
-										<input type="number" class="stext" name="totalfloor" maxlength="3">
+										<input type="number" class="stext" name="totalfloor"  v-model="houseData.totalfloor" maxlength="3">
 									</td>
 								</tr>
 								<tr>
 									<td class="field">朝向：</td>
-									<td><input type="number" class="mtext" name="direction"></td>
+
+									<td>
+                                        <select v-model="houseData.direction">
+                                            <option value="不限">不限</option>
+                                            <option value="东">东</option>
+                                            <option value="南">南</option>
+                                            <option value="西">西</option>
+                                            <option value="北">北</option>
+                                            <option value="东北">东北</option>
+                                            <option value="西北">西北</option>
+                                            <option value="东南">东南</option>
+                                            <option value="西南">西南</option>
+                                        </select>
+                                    </td>
 								</tr>
 								<tr>
 									<td class="field">价 格：</td>
 									<td>
-										<input type="number" class="mtext" name="price">
-										<input type="hidden" name="priceunit" value="元/月">
+										<input type="number" class="mtext"  v-model="houseData.price" name="price">
+										<input type="hidden" name="priceunit"  v-model="houseData.priceunit" value="元/月">
 									</td>
 								</tr>
 		                        <tr>
@@ -62,11 +77,11 @@
                                             <option value="0">请选择</option>
                                             <option v-for="prov in provinces" :value="prov.distid">{{ prov.name }}</option>
                                         </select>
-										<select v-model.number="cityId" @change="selectCity">
+										<select v-model.number="houseData.district_level2_id" @change="selectCity">
                                             <option value="0">请选择</option>
                                             <option v-for="city in cities" :value="city.distid">{{ city.name }}</option>
                                         </select>
-                                        <select v-model.number="countyId">
+                                        <select v-model.number="houseData.district_level3_id">
                                             <option value="0">请选择</option>
                                             <option v-for="county in counties" :value="county.distid">{{ county.name }}</option>
                                         </select>
@@ -75,21 +90,15 @@
 								<tr>
 									<td class="field">街 道：</td>
 									<td>
-										<input type="text" name="street" class="text">
-									</td>
-								</tr>
-								<tr>
-									<td class="field">楼 盘：</td>
-									<td>
-										<input type="text" name="estate" class="text">
+										<input type="text" name="street" v-model="houseData.street" class="text">
 									</td>
 								</tr>
 								<tr>
 									<td class="field">其 他：</td>
 									<td>
-										<input type="checkbox" name="hassubway">地铁
-										<input type="checkbox" name="isshared">支持合租
-										<input type="checkbox" name="hasagentfees">中介费
+										<input type="checkbox" name="hassubway" v-model="houseData.hassubway">地铁
+										<input type="checkbox" name="isshared" v-model="houseData.isshared">支持合租
+										<input type="checkbox" name="hasagentfees" v-model="houseData.hasagentfees">中介费
 									</td>
 								</tr>
 								<tr>
@@ -107,10 +116,10 @@
 								</tr>
 		                        <tr>
 									<td class="field">详细信息：</td>
-									<td><textarea name="detail"></textarea></td>
+									<td><textarea name="detail" v-model="houseData.detail"></textarea></td>
 								</tr>
 							</table>
-							<div class="buttons"><input type="submit" value="立即发布"></div>
+							<div class="buttons"><input type="submit" value="立即发布" @click="housePublish"></div>
 						</div>
                         {% endverbatim %}
 					</form>
@@ -119,6 +128,7 @@
 		</div>
 		{% include 'footer.html' %}
 		<script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+        <script src="//cdn.bootcss.com/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
         <script>
             const publish = new Vue({
                 el: '.infos',
@@ -127,36 +137,71 @@
 					cities: [],
 					counties: [],
                     housetypes:[],
-                    housetype: 0,
                     provId: 0,
-					cityId: 0,
-					countyId: 0,
+                    houseData:{
+                        type_id: 0,
+                        area: null,
+                        title: null,
+                        floor: null,
+                        totalfloor: null,
+                        direction: '不限',
+                        price: null,
+                        priceunit: '元/月',
+                        district_level2_id: 0,
+                        district_level3_id: 0,
+                        street: null,
+                        detail: null,
+                        hassubway: false,
+                        isshared: false,
+                        hasagentfees: false,
+                    }
                 },
                 created() {
-					fetch('/api/districts/')
-						.then(resp => resp.json())
-						.then(json => this.provinces = json.results);
-                    fetch('/api/housetypes/')
-                            .then(resp => resp.json())
-                            .then(json => this.housetypes = json.results )
+                    let token = $.cookie('token');
+                    if (token){
+                        let data = JSON.parse(window.atob(token.split('.')[1]));
+                        console.log(data.data.roleid);
+                        if (data.data.roleid > 1) {
+                            fetch('/api/districts/')
+                                .then(resp => resp.json())
+                                .then(json => this.provinces = json.results);
+                            fetch('/api/housetypes/')
+                                .then(resp => resp.json())
+                                .then(json => this.housetypes = json.results)
+                        }
+                        else {
+                            alert('抱歉您没有改权限');
+                            location.href = '/rent/index/'
+                        }
+                    }
+                    else {
+                        location.href = '/rent/login/'
+                    }
+
 				},
                 methods: {
                     selectProv() {
                         this.cities = [];
-                        this.cityId = 0;
+                        this.houseData.district_level2_id = 0;
                         this.counties = [];
-                        this.countyId = 0;
+                        this.houseData.district_level3_id = 0;
                         fetch('/api/districts/' + this.provId)
                             .then(resp => resp.json())
                             .then(json => this.cities = json.cities)
                     },
                     selectCity() {
 						this.counties = [];
-						this.countyId = 0;
-						fetch('/api/districts/' + this.cityId)
+						this.houseData.district_level3_id = 0;
+						fetch('/api/districts/' + this.houseData.district_level2_id)
 							.then(resp => resp.json())
 							.then(json => this.counties = json.cities)
 					},
+                    housePublish(){
+                        let houseData = JSON.stringify(this.houseData);
+                        console.log(houseData)
+                        alert(666)
+                    }
+
                 }
             })
         </script>

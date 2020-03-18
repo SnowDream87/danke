@@ -4,20 +4,18 @@ import os
 import time
 
 import jwt
-from django.db.models import Prefetch
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import status
 from rest_framework.decorators import api_view, action
 from rest_framework.filters import OrderingFilter
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
-from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
+from rest_framework.viewsets import ModelViewSet
 
 from api.consts import *
-from api.helpers import EstateFilterSet, HouseInfoFilterSet, DefaultResponse, LoginRequiredAuthentication, \
+from api.helpers import HouseInfoFilterSet, DefaultResponse, LoginRequiredAuthentication, \
     RbacPermission
 from api.serializers import *
 from common.models import District, Agent, HouseType, HouseInfo, User, LoginLog, Role
@@ -27,7 +25,7 @@ from zufang.settings import SECRET_KEY
 
 
 @api_view(('POST', ))
-def upload_house_photo(request ):
+def upload_house_photo(request):
     file_obj = request.FILES.get('mainphoto')
     if file_obj and len(file_obj) < MAX_PHOTO_SIZE:
         prefix = to_md5_hex(file_obj.file)
@@ -79,28 +77,32 @@ def login(request):
         user = User.objects.filter(q)\
             .only('username', 'realname').first()
         if user:
-            # 用户登录成功通过JWT生成用户身份令牌
-            payload = {
-                'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1),
-                'data': {
-                    'userid': user.userid,
-                    'realname': user.realname
+            if user.status:
+                # 用户登录成功通过JWT生成用户身份令牌
+                payload = {
+                    'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1),
+                    'data': {
+                        'userid': user.userid,
+                        'realname': user.realname,
+                        'roleid': user.roles.get_queryset().first().roleid
+                    }
                 }
-            }
-            token = jwt.encode(payload, SECRET_KEY, algorithm='HS256').decode()
-            with atomic():
-                current_time = timezone.now()
-                if not user.lastvisit or \
-                        (current_time - user.lastvisit).days >= 1:
-                    user.point += 2
-                    user.lastvisit = current_time
-                    user.save()
-                loginlog = LoginLog()
-                loginlog.user = user
-                loginlog.logdate = current_time
-                loginlog.ipaddr = get_ip_address(request)
-                loginlog.save()
-            resp = DefaultResponse(*USER_LOGIN_SUCCESS, data={'token': token})
+                token = jwt.encode(payload, SECRET_KEY, algorithm='HS256').decode()
+                with atomic():
+                    current_time = timezone.now()
+                    if not user.lastvisit or \
+                            (current_time - user.lastvisit).days >= 1:
+                        user.point += 2
+                        user.lastvisit = current_time
+                        user.save()
+                    loginlog = LoginLog()
+                    loginlog.user = user
+                    loginlog.logdate = current_time
+                    loginlog.ipaddr = get_ip_address(request)
+                    loginlog.save()
+                resp = DefaultResponse(*USER_LOGIN_SUCCESS, data={'token': token})
+            else:
+                resp = DefaultResponse(*USER_LOGIN_STATUS)
         else:
             resp = DefaultResponse(*USER_LOGIN_FAILED)
     else:
@@ -168,8 +170,8 @@ class HotCityView(ListAPIView):
     pagination_class = None
 
 
-@method_decorator(decorator=cache_page(timeout=86400), name='list')
-@method_decorator(decorator=cache_page(timeout=86400), name='retrieve')
+@method_decorator(decorator=cache_page(timeout=60), name='list')
+@method_decorator(decorator=cache_page(timeout=60), name='retrieve')
 class AgentViewSet(ModelViewSet):
     """经理人视图
     list:
@@ -196,11 +198,6 @@ class AgentViewSet(ModelViewSet):
             self.queryset = self.queryset.filter(servstar__gte=servstar)
         if self.action == 'list':
             self.queryset = self.queryset.only('name', 'tel', 'servstar')
-        else:
-            self.queryset = self.queryset.prefetch_related(
-                Prefetch('estates',
-                         queryset=Estate.objects.all().only('name').order_by('-hot'))
-            )
         return self.queryset.order_by('-servstar')
 
     def get_serializer_class(self):
@@ -228,38 +225,38 @@ class HouseTypeViewSet(ModelViewSet):
         })
 
 
-@method_decorator(decorator=cache_page(timeout=86400), name='list')
-@method_decorator(decorator=cache_page(timeout=86400), name='retrieve')
-class EstateViewSet(ReadOnlyModelViewSet):
-    """楼盘视图集"""
-    queryset = Estate.objects.all()
-    # 辅助数据筛选
-    filter_backends = (DjangoFilterBackend, OrderingFilter)
-    # filter_fields = ('name', 'hot', 'district') 都是精确条件不够灵活， 所以自定义EstateFilterSet
-    filterset_class = EstateFilterSet
-    ordering = '-hot'
-    ordering_fields = ('district', 'hot', 'name')
-    authentication_classes = (LoginRequiredAuthentication,)
-    permission_classes = (RbacPermission,)
-
-    def get_queryset(self):
-        if self.action == 'list':
-            queryset = self.queryset.only('name')
-        else:
-            queryset = self.queryset\
-                .defer('district__parent', 'district__ishot', 'district__intro')\
-                .select_related('district')
-        return queryset
-
-    def get_serializer_class(self):
-        return EstateDetailSerializer if self.action == 'retrieve' else EstateSimpleSerializer
-
-
 # @method_decorator(decorator=cache_page(timeout=86400), name='list')
 # @method_decorator(decorator=cache_page(timeout=86400), name='retrieve')
+# class EstateViewSet(ReadOnlyModelViewSet):
+#     """楼盘视图集"""
+#     queryset = Estate.objects.all()
+#     # 辅助数据筛选
+#     filter_backends = (DjangoFilterBackend, OrderingFilter)
+#     # filter_fields = ('name', 'hot', 'district') 都是精确条件不够灵活， 所以自定义EstateFilterSet
+#     filterset_class = EstateFilterSet
+#     ordering = '-hot'
+#     ordering_fields = ('district', 'hot', 'name')
+#     authentication_classes = (LoginRequiredAuthentication,)
+#     permission_classes = (RbacPermission,)
+#
+#     def get_queryset(self):
+#         if self.action == 'list':
+#             queryset = self.queryset.only('name')
+#         else:
+#             queryset = self.queryset\
+#                 .defer('district__parent', 'district__ishot', 'district__intro')\
+#                 .select_related('district')
+#         return queryset
+#
+#     def get_serializer_class(self):
+#         return EstateDetailSerializer if self.action == 'retrieve' else EstateSimpleSerializer
+
+
+@method_decorator(decorator=cache_page(timeout=60), name='list')
+@method_decorator(decorator=cache_page(timeout=60), name='retrieve')
 class HouseInfoViewSet(ModelViewSet):
     """房源信息视图集"""
-    queryset = HouseInfo.objects.all()
+    queryset = HouseInfo.objects.filter(status=True).all()
     serializer_class = HouseInfoDetailSerializer
     filter_backends = (DjangoFilterBackend, OrderingFilter)
     filterset_class = HouseInfoFilterSet
@@ -274,17 +271,16 @@ class HouseInfoViewSet(ModelViewSet):
     def get_queryset(self):
         if self.action == 'list':
             return self.queryset\
-                .only('houseid', 'title', 'area', 'floor', 'totalfloor', 'price', 'priceunit',
+                .only('houseid', 'title', 'area', 'floor', 'totalfloor', 'price', 'priceunit', 'user',
                       'mainphoto', 'street', 'district_level3__distid', 'district_level3__name', 'type', 'tags')\
-                .select_related('district_level3', 'type')\
+                .select_related('district_level3', 'type', 'user')\
                 .prefetch_related('tags')
         else:
             return self.queryset\
                 .defer('user', 'district_level2',
                        'district_level3__parent', 'district_level3__ishot', 'district_level3__intro',
-                       'estate__district', 'estate__hot', 'estate__intro',
                        'agent__realstar', 'agent__profstar', 'agent__certificated')\
-                .select_related('district_level3', 'type', 'estate', 'agent')\
+                .select_related('district_level3', 'type', 'agent')\
                 .prefetch_related('tags')
 
     def retrieve(self, request, *args, **kwargs):
@@ -294,6 +290,15 @@ class HouseInfoViewSet(ModelViewSet):
             'code': 2000,
             'message': '获取成功',
             'results': [serializer.data]
+        })
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.status = False
+        instance.save()
+        return Response({
+            'code': 2000,
+            'message': '删除成功',
         })
 
     def get_serializer_class(self):
@@ -304,7 +309,7 @@ class HouseInfoViewSet(ModelViewSet):
 
 class UserViewSet(ModelViewSet):
     """用户模型集视图"""
-    queryset = User.objects.all()
+    queryset = User.objects.filter(status=True).all()
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -315,12 +320,46 @@ class UserViewSet(ModelViewSet):
             'results': [serializer.data]
         })
 
+    def update(self, request, *args, **kwargs):
+        data = request.data
+
+        # 修改角色
+        if data.get('role_user'):
+            user = self.get_object()
+            role = UserRole.objects.filter(user=user).first()
+            role.role_id = 2
+            role.save()
+            return Response({
+                'code': 2000,
+                'message': '修改成功',
+            })
+        # 修改用户信息
+        if data:
+            user = User.objects.update(*data)
+            user.save()
+            res = Response({
+                'code': 2000,
+                'message': '修改成功',
+            })
+        # 删除用户
+        else:
+            instance = self.get_object()
+            instance.status = False
+            instance.save()
+            res = Response({
+                'code': 2000,
+                'message': '删除成功',
+            })
+        return res
+
     def get_serializer_class(self):
         if self.action == 'create':
             return UserCreateSerializer
         elif self.action == 'update':
             return UserUpdateSerializer
         return UserSimpleSerializer
+
+
 
 
 

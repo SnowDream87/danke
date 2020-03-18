@@ -3,8 +3,268 @@
 <head>
     <meta charset="UTF-8">
     <title>用户中心</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/head.css">
+    <link rel="stylesheet" href="/static/css/add_style.css">
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
 </head>
-<body>
-    <p>小孩子的个人中心</p>
-</body>
+    <body>
+        {% include 'header.html' %}
+        {% verbatim %}
+        <div id="app" v-cloak class="main wrap">
+            <table class="house-list">
+                <tr v-for="user">
+                    <td>
+                        <dl>
+                            <dt>
+                                <span>昵称：</span>&nbsp;
+                                <span>{{ user.username }}</span>&nbsp;
+                            </dt>
+                            <dd>
+                                <span>积分：</span>&nbsp;
+                                <span>{{ user.point }}</span>&nbsp;
+                            </dd>
+                            <dd>
+                                <span>邮箱：</span>
+                                <span>{{ user.email }}</span>
+                            </dd>
+                            <dd>
+                                <span>上次登录时间：</span>
+                                <span>{{ user.lastvisit }}</span>
+                            </dd>
+                            <dd id="register">
+                                <span>{{ userType }}</span>&nbsp;
+                                <span v-if="roleId == 1">
+                                    <button @click="registerAgent">经理人注册</button>
+                                </span>
+                            </dd>
+                        </dl>
+                        <div v-if="roleId > 1">
+                            <p>
+                                <button @click="history">发布历史</button>
+                            </p>
+                            <div id="app2" v-if="blockHistory">
+                                <el-table :data="houseInfos" style="width: 100%">
+                                    <el-table-column
+                                        prop="houseid"
+                                        label="编号"
+                                        width="50" >
+                                    </el-table-column>
+                                    <el-table-column
+                                        prop="title"
+                                        label="标签"
+                                        width="280">
+                                    </el-table-column>
+                                    <el-table-column
+                                        prop="area"
+                                        label="面积"
+                                        width="50">
+                                    </el-table-column>
+                                    <el-table-column
+                                        prop="price"
+                                        label="价格"
+                                        width="80">
+                                    </el-table-column>
+                                    <el-table-column
+                                        prop="street"
+                                        label="街道"
+                                        width="180">
+                                    </el-table-column>
+                                    <el-table-column
+                                        prop="district.name"
+                                        label="地区"
+                                        width="80">
+                                    </el-table-column>
+                                    <el-table-column
+                                        prop="type.name"
+                                        label="户型"
+                                        width="80">
+                                    </el-table-column>
+                                    <el-table-column
+                                            prop="houseid"
+                                            label="删除"
+                                            width="50">
+                                        <i class="el-icon-delete" @click="historyDeleted"></i>
+                                    </el-table-column>
+                                </el-table>
+                            </div>
+                        </div>
+                        <div v-if="roleId == 3">
+                            <p>
+                                <button @click="seeUsers">查看用户</button>&nbsp;&nbsp;&nbsp;&nbsp;
+                                <span v-if="blockUsers"><i class="el-icon-refresh" @click="refresh"></i></span>
+                            </p>
+                            <div id="app2" v-if="blockUsers">
+                                <el-table :data="users" style="width: 80%">
+                                    <el-table-column
+                                        prop="userid"
+                                        label="编号"
+                                        width="50" >
+                                    </el-table-column>
+                                    <el-table-column
+                                        prop="username"
+                                        label="昵称"
+                                        width="120">
+                                    </el-table-column>
+                                    <el-table-column
+                                        prop="realname"
+                                        label="姓名"
+                                        width="50">
+                                    </el-table-column>
+                                    <el-table-column
+                                        prop="tel"
+                                        label="电话"
+                                        width="180">
+                                    </el-table-column>
+                                    <el-table-column
+                                        prop="email"
+                                        label="邮箱"
+                                        width="200">
+                                    </el-table-column>
+                                    <el-table-column
+                                        prop="point"
+                                        label="积分"
+                                        width="50">
+                                    </el-table-column>
+                                    <el-table-column
+                                            prop="houseid"
+                                            label="删除"
+                                            width="50">
+                                        <i class="el-icon-delete" @click="userDeleted"></i>
+                                    </el-table-column>
+                                </el-table>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+            <a href="/rent/index/">首页</a>
+        </div>
+        {% endverbatim %}
+        {% include 'footer.html' %}
+        <script src="https://cdn.bootcss.com/vue/2.6.10/vue.min.js"></script>
+        <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+        <script src="//cdn.bootcss.com/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+        <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+        <script>
+            const app = new Vue({
+                el: '#app',
+                data: {
+                    url: '/api/users/',
+                    userId: null,
+                    user: [],
+                    roleId: null,
+                    houseInfos:[],
+                    users: [],
+                    blockHistory: false,
+                    blockUsers: false,
+                    userType: null,
+                    userDate: {
+                        name: null,
+                        tel: null,
+                        servstar: 0,
+                        realstar: 0,
+                        profstar: 0
+                    }
+                },
+                created(){
+                    let token = $.cookie('token');
+                    if (token) {
+                        let houseInfos = token.split('.')[1];
+                        let data = JSON.parse(window.atob(houseInfos));
+                        this.userId = data.data.userid;
+                        this.roleId = data.data.roleid;
+                        let dictionary = {
+                            '1': '普通用户',
+                            '2': '经理人',
+                            '3': '管理员'
+                        };
+                        this.userType = dictionary[this.roleId];
+                        fetch(this.url + this.userId)
+                            .then(resp => resp.json())
+                            .then(json => {
+                                this.user = json.results[0];
+                                this.userDate.name = json.results[0].realname;
+                                this.userDate.tel = json.results[0].tel;
+                            })
+                    }
+                    else {
+                        location.href = '/rent/login/'
+                    }
+                },
+                methods:{
+                    history(){
+                        this.blockHistory = !this.blockHistory;
+                        fetch('/api/houseinfos/' + '?user=' + this.userId)
+                            .then(resp => resp.json())
+                            .then(json => this.houseInfos = json.results);
+                    },
+                    historyDeleted(e){
+                        let el = e.currentTarget.parentElement.parentElement.parentElement.firstChild.firstChild.textContent;
+                        let url = '/api/houseinfos/';
+                        this.selectData(el, url);
+                        this.refreshHouseInfoData(url);
+                    },
+                    userDeleted(e){
+                        let el = e.currentTarget.parentElement.parentElement.parentElement.firstChild.firstChild.textContent;
+                        let url = '/api/users/';
+                        this.selectData(el, url);
+                        this.refreshUserData(url);
+                    },
+                    seeUsers(){
+                        this.blockUsers = !this.blockUsers;
+                        fetch('/api/users/')
+                            .then(resp => resp.json())
+                            .then(json => this.users = json.results)
+                    },
+                    registerAgent(){
+                        let agentData = JSON.stringify(this.userDate);
+                        console.log(agentData);
+                        let data = JSON.stringify({"role_user": true});
+                        fetch('/api/agents/', {
+                            method: 'POST',
+                            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json'},
+                            body: agentData,
+                        }).then(resp => resp.json()).then();
+                        fetch('/api/users/' + this.userId + '/', {
+                            method: 'PUT',
+                            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json'},
+                            body: data,
+                        }).then(resp => resp.json()).then(json => {
+                            this.setCookie(-1);
+                            alert(json.message + '请重新登录');
+                            location.href = '/rent/login/'
+                        })
+                    },
+                    refresh(){
+                        let url = '/api/users/';
+                        this.refreshUserData(url);
+                    },
+                    selectData(el, url){
+                        fetch(url + el + '/', {method: 'PUT'})
+                            .then(resp => resp.json())
+                            .then(json => alert(json.message))
+                    },
+                    refreshUserData(url){
+                        fetch(url)
+                            .then(resp => resp.json())
+                            .then(json => this.users = json.results)
+                    },
+                    refreshHouseInfoData(url){
+                        fetch(url)
+                            .then(resp => resp.json())
+                            .then(json => this.houseinfos = json.results)
+                    },
+                    setCookie(days){
+                        let token = $.cookie('token');
+                        let date = new Date();
+                        date.setTime(date.getTime()+(1000 * 86400 * days));
+                        let expires = "; expires="+date.toGMTString();
+                        document.cookie = "token=" + token + expires + "; path=/";
+                    },
+                }
+            })
+        </script>
+
+    </body>
 </html>

@@ -5,6 +5,7 @@
 		<title>租房网 - 用户注册</title>
 		<link rel="stylesheet" href="/static/css/style.css">
         <link rel="stylesheet" href="/static/css/head.css">
+        <link rel="stylesheet" href="/static/css/add_style.css">
     </head>
 	<body>
 		{% include 'header.html' %}
@@ -72,7 +73,6 @@
             const regLogin = new Vue({
                 el: '#registerForm',
                 data:{
-                    url: 'http://127.0.0.1:8000/',
                     form: {
                         username: null,
                         password: null,
@@ -88,7 +88,7 @@
                 },
                 methods:{
                     getCode(){
-                        fetch(this.url + 'api/mobile/' + this.form.tel)
+                        fetch('/api/mobile/' + this.form.tel)
                             .then(resp => resp.json())
                             .then(json => {
                                 if (json.code != 100001) {
@@ -98,7 +98,7 @@
                     },
                     onRegister(){
                         let formData = JSON.stringify(this.form);
-                        fetch(this.url + "api/users/", {
+                        fetch("/api/users/", {
                             method:"POST",
                             headers: { 'Accept': 'application/json', 'Content-Type': 'application/json'},
                             body: formData

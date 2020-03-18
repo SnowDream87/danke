@@ -32,6 +32,7 @@ a:link, a:visited, a:hover, a:active { color:#3a52a8; text-decoration:underline;
 .wrap { width:960px; margin:0 auto; }
 #header { overflow:hidden; border-bottom: 1px solid darkgray; }
 #header #logo { float:left; width:300px; }
+
 #header .login { line-height:30px; padding-left:250px; text-align:right; }
 #header .search { line-height:25px; padding-left:300px; text-align:right; }
 
@@ -67,6 +68,8 @@ a:link, a:visited, a:hover, a:active { color:#3a52a8; text-decoration:underline;
 .house-list td.house-type { text-align:center; width:120px; }
 .house-list td.house-price { color:#ff3300; width:150px; text-align:center; }
 .house-list td.house-price span { font-size:16px; vertical-align:middle; padding:0 4px; font-family:"Arial Black", Gadget, sans-serif; }
+.house-list .house-tag { display: inline-block; border: 1px solid red; margin-right: 10px; }
+.house-list .house-pay { width: 80px; height: 30px; outline: none; border: none; background-color: rgb(180,0,5); color: white; }
 
 .pager { background:#fdfff2; border-bottom:1px solid #ccc; line-height:30px; }
 .pager ul { float:right; line-height:16px; margin:5px; }
@@ -123,3 +126,5 @@ a:link, a:visited, a:hover, a:active { color:#3a52a8; text-decoration:underline;
 #regLogin .dialog .box .infos { padding:40px 0; }
 #regLogin .dialog .box .buttons input { background-color:rgb(180,0,5); outline: none; border:none; width:125px; height:36px; font-size:14px; font-weight:bold; color:#fff; }
 #regLogin .dialog .verycode { width:130px; }
+
+#prevArea > img { display: inline-block; width: 160px; }

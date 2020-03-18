@@ -1,10 +1,10 @@
 {% load staticfiles %}
 <div id="header" class="wrap">
     <div id="logo">
-        <img src="/static/images/logo.png" width="160" height="40">
+        <img src="/static/images/danke_logo.png" width="70" height="40">
     </div>
         {% verbatim %}
-        <div id="headbar">
+        <div id="headbar" v-cloak>
             <a href="/rent/userinfo" v-if="block">{{ realName }}</a>
             <a href="/rent/login" v-else>用户登录</a>
             <a href="" v-if="block" @click="clearCookie">退出登录</a>

@@ -6,7 +6,8 @@ INVALID_TEL_NUM = (100003, '请提供有效的手机号')
 
 USER_LOGIN_SUCCESS = (200001, '用户登录成功')
 USER_LOGIN_FAILED = (200002, '用户名或密码错误')
-INVALID_LOGIN_INFO = (200003, '请输入有效的登录信息')
+USER_LOGIN_STATUS = (200003, '该用户已被删除')
+INVALID_LOGIN_INFO = (200004, '请输入有效的登录信息')
 
 FILE_UPLOAD_SUCCESS = (300001, '文件上传成功')
 FILE_SIZE_EXCEEDED = (300002, f'未指定上传文件或文件大小超过{MAX_PHOTO_SIZE}字节')

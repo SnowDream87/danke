@@ -36,6 +36,8 @@ class User(models.Model):
     point = models.IntegerField(default=0)
     # 用户最后登录日期时间
     lastvisit = models.DateTimeField(blank=True, null=True)
+    # 用户状态
+    status = models.BooleanField(default=True)
     # 用户角色
     roles = models.ManyToManyField(to='Role', through='UserRole')
 
@@ -79,43 +81,11 @@ class Agent(models.Model):
     # 经理人是否持有专业认证
     certificated = models.BooleanField(default=False)
     # 经理人负责的楼盘
-    estates = models.ManyToManyField(to='Estate', through='AgentEstate')
+    # estates = models.ManyToManyField(to='Estate', through='AgentEstate')
 
     class Meta:
         managed = False
         db_table = 'tb_agent'
-
-
-class Estate(models.Model):
-    """楼盘"""
-    # 楼盘ID
-    estateid = models.AutoField(primary_key=True)
-    # 所属行政区域
-    district = models.ForeignKey(to=District, on_delete=models.DO_NOTHING, db_column='distid')
-    # 楼盘名称
-    name = models.CharField(max_length=255)
-    # 楼盘热度
-    hot = models.IntegerField(default=0)
-    # 楼盘介绍
-    intro = models.CharField(max_length=511, default='')
-
-    class Meta:
-        managed = False
-        db_table = 'tb_estate'
-
-
-class AgentEstate(models.Model):
-    """经理人楼盘中间实体"""
-    agent_estate_id = models.AutoField(primary_key=True)
-    # 经理人
-    agent = models.ForeignKey(to=Agent, on_delete=models.DO_NOTHING, db_column='agentid')
-    # 楼盘
-    estate = models.ForeignKey(to=Estate, on_delete=models.DO_NOTHING, db_column='estateid')
-
-    class Meta:
-        managed = False
-        db_table = 'tb_agent_estate'
-        unique_together = (('agent', 'estate'), )
 
 
 class HouseType(models.Model):
@@ -172,11 +142,11 @@ class HouseInfo(models.Model):
     # 房源所属三级行政区域
     district_level3 = models.ForeignKey(to=District, on_delete=models.DO_NOTHING, related_name='+', db_column='distid3')
     # 房源所属楼盘
-    estate = models.ForeignKey(to=Estate, on_delete=models.DO_NOTHING, db_column='estateid', null=True)
-    # 负责该房源的经理人
     agent = models.ForeignKey(to=Agent, on_delete=models.DO_NOTHING, db_column='agentid', null=True)
     # 房源标签
     tags = models.ManyToManyField(to='Tag', through='HouseTag')
+    # 房源状态
+    status = models.BooleanField(default=False)
 
     class Meta:
         managed = False

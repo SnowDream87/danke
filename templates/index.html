@@ -5,11 +5,11 @@
 		<title>租房网 - 首页</title>
 		<link rel="stylesheet" href="/static/css/style.css">
         <link rel="stylesheet" href="/static/css/head.css">
-
+        <link rel="stylesheet" href="/static/css/add_style.css">
+        <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
 	</head>
 	<body>
         {% include 'header.html' %}
-        <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
         <div id="navbar" class="wrap">
             {% verbatim %}
 			<div id="app2" class="search clearfix" @change="search()" >
@@ -93,7 +93,7 @@
             {% endverbatim %}
 		</div>
         {% verbatim %}
-		<div id="app" class="main wrap">
+		<div id="app" v-cloak class="main wrap">
 			<table class="house-list">
 				<tr v-for="house in houseinfos">
 					<td class="house-thumb">
@@ -139,19 +139,20 @@
 				data: {
 				    houseinfos: [],
                     url: '/api/houseinfos/',
-                    district:510100,
+                    district:'510100',
 				    count: 0,
                     nextPage: null,
                     prevPage: null,
 				},
 				created() {
-					fetch(this.url + '?' + district)
+				    let url =  this.url + '?district=' +  this.district;
+					fetch(url)
 						.then(resp => resp.json())
 						.then(json => {
 							this.houseinfos = json.results
 						});
 
-                    this.loadData(this.url)
+                    this.loadData(url)
 				},
                 methods: {
                     handleCurrentChange(currentPage) {
@@ -186,7 +187,6 @@
 					cityId: 0,
 					countyId: 0,
 					housetype: 0,
-                    url: 'http://127.0.0.1:8000/',
 					area: '0-99999999'
 				},
 				created() {
@@ -216,7 +216,7 @@
 					},
                     search() {
 					    if (this.cityId != 0) {
-                            url = this.url + 'api/houseinfos/?';
+                            url = '/api/houseinfos/?';
                             var title = this.title.trim();
                             if (title.length > 0) {
                                 url += `title=${title}&`

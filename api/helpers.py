@@ -10,7 +10,7 @@ from django_filters import filterset
 from rest_framework.permissions import BasePermission
 from rest_framework.response import Response
 
-from common.models import Estate, HouseInfo, User, Role
+from common.models import HouseInfo, User, Role
 from zufang.settings import SECRET_KEY
 
 
@@ -81,16 +81,16 @@ class AgentCursorPagination(CursorPagination):
     ordering = '-agentid'
 
 
-class EstateFilterSet(filterset.FilterSet):
-    """自定义楼盘筛选器"""
-    name = filterset.CharFilter(lookup_expr='startswith')
-    minhot = filterset.NumberFilter(field_name='hot', lookup_expr='gte')
-    maxhot = filterset.NumberFilter(field_name='hot', lookup_expr='lte')
-    dist = filterset.NumberFilter(field_name='district')
-
-    class Meta:
-        model = Estate
-        fields = ('name', 'minhot', 'maxhot', 'dist')
+# class EstateFilterSet(filterset.FilterSet):
+#     """自定义楼盘筛选器"""
+#     name = filterset.CharFilter(lookup_expr='startswith')
+#     minhot = filterset.NumberFilter(field_name='hot', lookup_expr='gte')
+#     maxhot = filterset.NumberFilter(field_name='hot', lookup_expr='lte')
+#     dist = filterset.NumberFilter(field_name='district')
+#
+#     class Meta:
+#         model = Estate
+#         fields = ('name', 'minhot', 'maxhot', 'dist')
 
 
 class HouseInfoFilterSet(filterset.FilterSet):
@@ -101,6 +101,7 @@ class HouseInfoFilterSet(filterset.FilterSet):
     minarea = filterset.NumberFilter(field_name='area', lookup_expr='gte')
     maxarea = filterset.NumberFilter(field_name='area', lookup_expr='lte')
     housetype = filterset.NumberFilter(field_name='type')
+    user = filterset.NumberFilter(field_name='user')
     district = filterset.NumberFilter(method='filter_by_district')
 
     @staticmethod
