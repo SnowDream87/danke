@@ -17,19 +17,19 @@
                     <td>
                         <dl>
                             <dt>
-                                <span>昵称：</span>&nbsp;
+                                <span><b>昵称：</b></span>&nbsp;
                                 <span>{{ user.username }}</span>&nbsp;
                             </dt>
                             <dd>
-                                <span>积分：</span>&nbsp;
+                                <span><b>积分：</b></span>&nbsp;
                                 <span>{{ user.point }}</span>&nbsp;
                             </dd>
                             <dd>
-                                <span>邮箱：</span>
+                                <span><b>邮箱：</b></span>
                                 <span>{{ user.email }}</span>
                             </dd>
                             <dd>
-                                <span>上次登录时间：</span>
+                                <span><b>上次登录时间：</b></span>
                                 <span>{{ user.lastvisit }}</span>
                             </dd>
                             <dd id="register">
@@ -41,7 +41,8 @@
                         </dl>
                         <div v-if="roleId > 1">
                             <p>
-                                <button @click="history">发布历史</button>
+                                <button @click="history">发布历史</button>&nbsp;&nbsp;&nbsp;&nbsp;
+                                <span v-if="blockHistory"><i class="el-icon-refresh" @click="houseRefresh"></i></span>
                             </p>
                             <div id="app2" v-if="blockHistory">
                                 <el-table :data="houseInfos" style="width: 100%">
@@ -87,12 +88,20 @@
                                         <i class="el-icon-delete" @click="historyDeleted"></i>
                                     </el-table-column>
                                 </el-table>
+                                <el-pagination id="pages"
+                                    layout="prev, pager, next"
+                                    page-size="5"
+                                    :total="houseNext.count"
+                                    @current-change="houseHandleCurrentChange"
+                                    @prev-click="houseLoadData(houseNext.prevPage)"
+                                    @next-click="houseLoadData(houseNext.nextPage)">
+                                </el-pagination>
                             </div>
                         </div>
-                        <div v-if="roleId == 3">
+                        <div v-if="roleId > 2">
                             <p>
                                 <button @click="seeUsers">查看用户</button>&nbsp;&nbsp;&nbsp;&nbsp;
-                                <span v-if="blockUsers"><i class="el-icon-refresh" @click="refresh"></i></span>
+                                <span v-if="blockUsers"><i class="el-icon-refresh" @click="userRefresh"></i></span>
                             </p>
                             <div id="app2" v-if="blockUsers">
                                 <el-table :data="users" style="width: 80%">
@@ -133,6 +142,14 @@
                                         <i class="el-icon-delete" @click="userDeleted"></i>
                                     </el-table-column>
                                 </el-table>
+                                <el-pagination id="pages"
+                                    layout="prev, pager, next"
+                                    page-size="5"
+                                    :total="userNext.count"
+                                    @current-change="userHandleCurrentChange"
+                                    @prev-click="userLoadData(userNext.prevPage)"
+                                    @next-click="userLoadData(userNext.nextPage)">
+                                </el-pagination>
                             </div>
                         </div>
                     </td>
@@ -146,125 +163,6 @@
         <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
         <script src="//cdn.bootcss.com/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
         <script src="https://unpkg.com/element-ui/lib/index.js"></script>
-        <script>
-            const app = new Vue({
-                el: '#app',
-                data: {
-                    url: '/api/users/',
-                    userId: null,
-                    user: [],
-                    roleId: null,
-                    houseInfos:[],
-                    users: [],
-                    blockHistory: false,
-                    blockUsers: false,
-                    userType: null,
-                    userDate: {
-                        name: null,
-                        tel: null,
-                        servstar: 0,
-                        realstar: 0,
-                        profstar: 0
-                    }
-                },
-                created(){
-                    let token = $.cookie('token');
-                    if (token) {
-                        let houseInfos = token.split('.')[1];
-                        let data = JSON.parse(window.atob(houseInfos));
-                        this.userId = data.data.userid;
-                        this.roleId = data.data.roleid;
-                        let dictionary = {
-                            '1': '普通用户',
-                            '2': '经理人',
-                            '3': '管理员'
-                        };
-                        this.userType = dictionary[this.roleId];
-                        fetch(this.url + this.userId)
-                            .then(resp => resp.json())
-                            .then(json => {
-                                this.user = json.results[0];
-                                this.userDate.name = json.results[0].realname;
-                                this.userDate.tel = json.results[0].tel;
-                            })
-                    }
-                    else {
-                        location.href = '/rent/login/'
-                    }
-                },
-                methods:{
-                    history(){
-                        this.blockHistory = !this.blockHistory;
-                        fetch('/api/houseinfos/' + '?user=' + this.userId)
-                            .then(resp => resp.json())
-                            .then(json => this.houseInfos = json.results);
-                    },
-                    historyDeleted(e){
-                        let el = e.currentTarget.parentElement.parentElement.parentElement.firstChild.firstChild.textContent;
-                        let url = '/api/houseinfos/';
-                        this.selectData(el, url);
-                        this.refreshHouseInfoData(url);
-                    },
-                    userDeleted(e){
-                        let el = e.currentTarget.parentElement.parentElement.parentElement.firstChild.firstChild.textContent;
-                        let url = '/api/users/';
-                        this.selectData(el, url);
-                        this.refreshUserData(url);
-                    },
-                    seeUsers(){
-                        this.blockUsers = !this.blockUsers;
-                        fetch('/api/users/')
-                            .then(resp => resp.json())
-                            .then(json => this.users = json.results)
-                    },
-                    registerAgent(){
-                        let agentData = JSON.stringify(this.userDate);
-                        console.log(agentData);
-                        let data = JSON.stringify({"role_user": true});
-                        fetch('/api/agents/', {
-                            method: 'POST',
-                            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json'},
-                            body: agentData,
-                        }).then(resp => resp.json()).then();
-                        fetch('/api/users/' + this.userId + '/', {
-                            method: 'PUT',
-                            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json'},
-                            body: data,
-                        }).then(resp => resp.json()).then(json => {
-                            this.setCookie(-1);
-                            alert(json.message + '请重新登录');
-                            location.href = '/rent/login/'
-                        })
-                    },
-                    refresh(){
-                        let url = '/api/users/';
-                        this.refreshUserData(url);
-                    },
-                    selectData(el, url){
-                        fetch(url + el + '/', {method: 'PUT'})
-                            .then(resp => resp.json())
-                            .then(json => alert(json.message))
-                    },
-                    refreshUserData(url){
-                        fetch(url)
-                            .then(resp => resp.json())
-                            .then(json => this.users = json.results)
-                    },
-                    refreshHouseInfoData(url){
-                        fetch(url)
-                            .then(resp => resp.json())
-                            .then(json => this.houseinfos = json.results)
-                    },
-                    setCookie(days){
-                        let token = $.cookie('token');
-                        let date = new Date();
-                        date.setTime(date.getTime()+(1000 * 86400 * days));
-                        let expires = "; expires="+date.toGMTString();
-                        document.cookie = "token=" + token + expires + "; path=/";
-                    },
-                }
-            })
-        </script>
-
+        <script src="/static/js/user_info.js"></script>
     </body>
 </html>

@@ -143,7 +143,7 @@ CORS_ALLOW_METHODS = (
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'danke',
+        'NAME': 'danke_test',
         'HOST': '120.27.241.198',
         'PORT': 3306,
         'USER': 'root',

@@ -36,6 +36,16 @@
 					</td>
 					<td class="house-type">{{ house.type.name }}</td>
 					<td class="house-price"><span>{{ house.price }}</span>{{ house.priceunit }}</td>
+					<td>
+						<dt>
+							<span><b>发布人:</b></span>
+							<span>{{house.user.realname}}</span>
+						</dt>
+						<dd>
+							<span><b>发布时间:</b></span>
+							<span>{{ house.pubdate }}</span>
+						</dd>
+					</td>
 				</tr>
 
 			</table>
@@ -56,6 +66,7 @@
 				    let a = window.location.pathname;
                     let str = a.split('/');
                     let houseid = str.pop();
+                    console.log(houseid)
 					fetch('/api/houseinfos/' + houseid)
 						.then(resp => resp.json())
 						.then(json => {

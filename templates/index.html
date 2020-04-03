@@ -143,11 +143,15 @@
 				    count: 0,
                     nextPage: null,
                     prevPage: null,
+                    token: null,
 				},
 				created() {
+					let token = $.cookie('token')
+					this.token = token
 				    let url =  this.url + '?district=' +  this.district;
-					fetch(url)
-						.then(resp => resp.json())
+					fetch(url, {
+						headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'token':this.token},
+					}).then(resp => resp.json())
 						.then(json => {
 							this.houseinfos = json.results
 						});
@@ -156,11 +160,13 @@
 				},
                 methods: {
                     handleCurrentChange(currentPage) {
-                        this.loadData('/api/houseinfos/?page=' + currentPage)
+                        this.loadData('/api/houseinfos/?district='+this.district+'&page=' + currentPage)
                     },
                     loadData(url) {
                         if (url) {
-                            fetch(url)
+                            fetch(url, {
+								headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'token':this.token},
+							})
                                 .then(resp => resp.json())
                                 .then(json => {
                                     this.houseinfos = json.results;
@@ -169,7 +175,7 @@
                                     this.prevPage = json.previous;
                                 })
                         }
-                    }
+                    }                    
                 },
 			})
 		</script>
@@ -241,7 +247,12 @@
                             } else {
                                 url += `district=${this.cityId}`
                             }
-
+                            if (this.countyId == 0){
+								app1.district = this.cityId;
+							}
+							else {
+								app1.district = this.countyId
+							}
                             fetch(url)
                                 .then(resp => resp.json())
                                 .then(json => {

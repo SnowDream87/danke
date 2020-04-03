@@ -141,12 +141,12 @@ class HouseInfo(models.Model):
     district_level2 = models.ForeignKey(to=District, on_delete=models.DO_NOTHING, related_name='+', db_column='distid2')
     # 房源所属三级行政区域
     district_level3 = models.ForeignKey(to=District, on_delete=models.DO_NOTHING, related_name='+', db_column='distid3')
-    # 房源所属楼盘
+    # 房源所属经理
     agent = models.ForeignKey(to=Agent, on_delete=models.DO_NOTHING, db_column='agentid', null=True)
     # 房源标签
     tags = models.ManyToManyField(to='Tag', through='HouseTag')
     # 房源状态
-    status = models.BooleanField(default=False)
+    status = models.BooleanField(default=True)
 
     class Meta:
         managed = False
@@ -161,6 +161,8 @@ class HousePhoto(models.Model):
     house = models.ForeignKey(to=HouseInfo, on_delete=models.DO_NOTHING, db_column='houseid')
     # 图片资源路径
     path = models.CharField(max_length=255)
+    # 是否是主图
+    # ismain = models.BooleanField(default=False)
 
     class Meta:
         managed = False

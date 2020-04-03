@@ -13,8 +13,8 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'zufang.settings')
 
 app = celery.Celery(
 	'zufang',
-	broker='redis//:8753.@120.27.241.198:6379/1',
-	# broker='amqp://loren:8753.@120.27.241.198:5672/zufangwang_vhost',
+	# broker='redis//:8753.@120.27.241.198:6379/1',
+	broker='amqp://loren:8753.@120.27.241.198:5672/zufangwang_vhost',
 	backend='redis://:8753.@120.27.241.198:6379/2'
 )
 

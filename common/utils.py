@@ -1,6 +1,7 @@
 """
 项目常用工具函数
 """
+import io
 import json
 import random
 from functools import wraps, partial
@@ -8,12 +9,13 @@ from functools import wraps, partial
 from hashlib import md5
 from io import BytesIO
 
+import qiniu
 import qrcode
 import requests
 from PIL.Image import Image
 from qiniu import Auth, put_file, put_stream
 
-from common.consts import EXECUTOR
+from common.consts import EXECUTOR, AUTH, QINIU_BUCKET_NAME
 from zufang import app
 
 
@@ -23,9 +25,16 @@ def get_ip_address(request):
     return ip or request.META['REMOTE_ADDR']
 
 
-def to_md5_hex(origin_str):
+def to_md5_hex(data):
     """生成MD5摘要"""
-    return md5(origin_str.encode('utf-8')).hexdigest()
+    if type(data) != bytes:
+        if type(data) == str:
+            data = data.encode()
+        elif type(data) == io.BytesIO:
+            data = data.getvalue()
+        else:
+            data = bytes(data)
+    return md5(data).hexdigest()
 
 
 def gen_mobile_code(length=6):
@@ -81,25 +90,19 @@ def send_sms_by_luosimao(tel, message):
     # return {'message': message}
 
 
-QINIU_ACCESS_KEY = 'access_key'
-QINIU_SECRET_KEY = 'secret_key'
-QINIU_BUCKET_NAME = 'bucket_name'
-
-auth = Auth(QINIU_ACCESS_KEY, QINIU_SECRET_KEY)
-
-
 @app.task
 def upload_filepath_to_qiniu(file_path, filename):
     """将文件上传到七牛云存储"""
-    token = auth.upload_token(QINIU_BUCKET_NAME, filename)
-    put_file(token, filename, file_path)
+    token = AUTH.upload_token(QINIU_BUCKET_NAME, filename)
+    return qiniu.put_file(token, filename, file_path)
 
 
 @app.task
 def upload_stream_to_qiniu(file_stream, filename, size):
     """将数据流上传到七牛云存储"""
-    token = auth.upload_token(QINIU_BUCKET_NAME, filename)
-    put_stream(token, filename, file_stream, None, size)
+    token = AUTH.upload_token(QINIU_BUCKET_NAME, filename)
+    result, *_ = qiniu.put_stream(token, filename, file_stream, None, size)
+    return result
 
 
 def run_in_thread_pool(*, callbacks=(), callbacks_kwargs=()):

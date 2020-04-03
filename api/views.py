@@ -18,7 +18,7 @@ from api.consts import *
 from api.helpers import HouseInfoFilterSet, DefaultResponse, LoginRequiredAuthentication, \
     RbacPermission
 from api.serializers import *
-from common.models import District, Agent, HouseType, HouseInfo, User, LoginLog, Role
+from common.models import District, Agent, HouseType, HouseInfo, User, LoginLog, Role, HouseTag
 from common.utils import to_md5_hex, get_ip_address, gen_mobile_code, send_sms_by_luosimao, upload_stream_to_qiniu
 from common.validators import check_tel, check_email, check_username
 from zufang.settings import SECRET_KEY
@@ -31,13 +31,12 @@ def upload_house_photo(request):
         prefix = to_md5_hex(file_obj.file)
         filename = f'{prefix}{os.path.splitext(file_obj.name)[1]}'
         upload_stream_to_qiniu.delay(file_obj, filename, len(file_obj))
-        photo = HousePhoto()
-        photo.path = f'http://q69nr46pe.bkt.clouddn.com/{filename}'
-        photo.ismain = True
-        photo.save()
+        # photo = HousePhoto()
+        # photo.path = f'http://q69nr46pe.bkt.clouddn.com/{filename}'
+        # photo.ismain = True
+        # photo.save()
         resp = DefaultResponse(*FILE_UPLOAD_SUCCESS, data={
-            'photoid': photo.photoid,
-            'url': photo.path
+            'url': f'http://q6i8nba3h.bkt.clouddn.com/{filename}'
         })
     else:
         resp = DefaultResponse(*FILE_SIZE_EXCEEDED)
@@ -252,8 +251,8 @@ class HouseTypeViewSet(ModelViewSet):
 #         return EstateDetailSerializer if self.action == 'retrieve' else EstateSimpleSerializer
 
 
-@method_decorator(decorator=cache_page(timeout=60), name='list')
-@method_decorator(decorator=cache_page(timeout=60), name='retrieve')
+# @method_decorator(decorator=cache_page(timeout=60), name='list')
+# @method_decorator(decorator=cache_page(timeout=60), name='retrieve')
 class HouseInfoViewSet(ModelViewSet):
     """房源信息视图集"""
     queryset = HouseInfo.objects.filter(status=True).all()
@@ -262,6 +261,8 @@ class HouseInfoViewSet(ModelViewSet):
     filterset_class = HouseInfoFilterSet
     ordering = ('-pubdate',)
     ordering_fields = ('pubdate', 'price')
+    # authentication_classes = (LoginRequiredAuthentication,)
+    # permission_classes = (RbacPermission,)
 
     @action(methods=('GET',), detail=True)
     def photos(self, request, pk):
@@ -277,10 +278,10 @@ class HouseInfoViewSet(ModelViewSet):
                 .prefetch_related('tags')
         else:
             return self.queryset\
-                .defer('user', 'district_level2',
+                .defer('district_level2',
                        'district_level3__parent', 'district_level3__ishot', 'district_level3__intro',
                        'agent__realstar', 'agent__profstar', 'agent__certificated')\
-                .select_related('district_level3', 'type', 'agent')\
+                .select_related('district_level3', 'type', 'agent', 'user')\
                 .prefetch_related('tags')
 
     def retrieve(self, request, *args, **kwargs):
@@ -301,6 +302,26 @@ class HouseInfoViewSet(ModelViewSet):
             'message': '删除成功',
         })
 
+    def create(self, request, *args, **kwargs):
+        tags = request.data.get('tagData')
+        serializer = self.get_serializer(data=request.data.get('houseData'))
+        if not serializer.is_valid(raise_exception=True):
+            resp = Response({
+                'code': 4000,
+                'message': '字段错误',
+            })
+        else:
+            with atomic():
+                house = serializer.save()
+                houseid = house.houseid
+                for tagid in tags.get('tagId'):
+                    HouseTag.objects.create(house_id=houseid, tag_id=tagid)
+            resp = Response({
+                'code': 2000,
+                'message': '添加成功',
+            })
+        return resp
+
     def get_serializer_class(self):
         if self.action in ('update', 'create'):
             return HouseInfoCrateSerializer
@@ -310,6 +331,8 @@ class HouseInfoViewSet(ModelViewSet):
 class UserViewSet(ModelViewSet):
     """用户模型集视图"""
     queryset = User.objects.filter(status=True).all()
+    authentication_classes = (LoginRequiredAuthentication,)
+    permission_classes = (RbacPermission,)
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()

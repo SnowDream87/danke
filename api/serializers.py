@@ -99,7 +99,7 @@ class HouseInfoSimpleSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_mainphoto(houseinfo):
-        return '/media/images/' + houseinfo.mainphoto
+        return houseinfo.mainphoto
 
     @staticmethod
     def get_district(houseinfo):
@@ -139,10 +139,15 @@ class HouseInfoDetailSerializer(serializers.ModelSerializer):
     tags = serializers.SerializerMethodField()
     agent = serializers.SerializerMethodField()
     mainphoto = serializers.SerializerMethodField()
+    user = serializers.SerializerMethodField()
+
+    @staticmethod
+    def get_user(houseinfo):
+        return UserVerySimpleSerializer(houseinfo.user).data
 
     @staticmethod
     def get_mainphoto(houseinfo):
-        return '/media/images/' + houseinfo.mainphoto
+        return houseinfo.mainphoto
 
     @staticmethod
     def get_photos(houseinfo):
@@ -167,7 +172,7 @@ class HouseInfoDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = HouseInfo
-        exclude = ('district_level2', 'district_level3', 'user')
+        exclude = ('district_level2', 'district_level3')
 
 
 class RoleSimpleSerializer(serializers.ModelSerializer):
