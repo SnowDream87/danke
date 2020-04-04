@@ -1,7 +1,7 @@
 ﻿<!DOCTYPE html>
 <html>
 	<head>
-		<meta charset="utf-8">
+		<meta name="referrer" content="no-referrer" charset="utf-8">
 		<title>租房网 - 首页</title>
 		<link rel="stylesheet" href="/static/css/style.css">
         <link rel="stylesheet" href="/static/css/head.css">
@@ -98,7 +98,7 @@
 				<tr v-for="house in houseinfos">
 					<td class="house-thumb">
 						<div>
-							<img :src="house.mainphoto" width="160" height="120" alt="">
+							<img referrer="no-referrer|origin|unsafe-url" :src="house.mainphoto" width="160" height="120" alt="">
 							<span class="count">图</span>
 						</div>
 					</td>
@@ -123,7 +123,7 @@
 			</table>
 			<el-pagination id="pages"
                 layout="prev, pager, next"
-                page-size="5"
+                page-size="20"
                 :total="count"
                 @current-change="handleCurrentChange"
                 @prev-click="loadData(prevPage)"
@@ -144,6 +144,7 @@
                     nextPage: null,
                     prevPage: null,
                     token: null,
+                    page: 1
 				},
 				created() {
 					let token = $.cookie('token')
@@ -160,9 +161,13 @@
 				},
                 methods: {
                     handleCurrentChange(currentPage) {
-                        this.loadData('/api/houseinfos/?district='+this.district+'&page=' + currentPage)
+                    	console.log(this.district)
+                    	this.page = currentPage
+                        this.loadData('/api/houseinfos/?title='+app2.title+'&minprice='+app2.minprice+'&maxprice='+app2.maxprice+'&minarea='+app2.minarea+'&maxarea='+app2.maxarea+'&district='+this.district+'&page=' + currentPage)
                     },
+                    
                     loadData(url) {
+                    	
                         if (url) {
                             fetch(url, {
 								headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'token':this.token},
@@ -173,6 +178,7 @@
                                     this.count = json.count;
                                     this.nextPage = json.next;
                                     this.prevPage = json.previous;
+                                    this.page = 1
                                 })
                         }
                     }                    
@@ -193,7 +199,11 @@
 					cityId: 0,
 					countyId: 0,
 					housetype: 0,
-					area: '0-99999999'
+					area: '0-99999999',
+					minprice:0,
+					maxprice: 999999999,
+					minarea: 0,
+					maxarea:99999999,
 				},
 				created() {
 					fetch('/api/districts/')
@@ -202,6 +212,7 @@
                     fetch('/api/housetypes/')
                             .then(resp => resp.json())
                             .then(json => this.housetypes = json.results )
+              
 				},
 				methods: {
 					selectProv() {
@@ -221,8 +232,7 @@
 							.then(json => this.counties = json.cities)
 					},
                     search() {
-					    if (this.cityId != 0) {
-                            url = '/api/houseinfos/?';
+                            url = '/api/houseinfos/?page=' + app1.page + '&';
                             var title = this.title.trim();
                             if (title.length > 0) {
                                 url += `title=${title}&`
@@ -230,24 +240,32 @@
                             var prices = this.price.split('-');
                             minprice = prices[0];
                             maxprice = prices[1];
+                            this.minprice = minprice
+                            this.maxprice = maxprice
                             url += `minprice=${minprice}&maxprice=${maxprice}&`;
 
                             var area = this.area.split('-');
                             minarea = area[0];
                             maxarea = area[1];
+                            this.minarea = minarea
+                            this,maxarea = maxarea
                             url += `minarea=${minarea}&maxarea=${maxarea}&`;
 
                             var housetype = this.housetype;
                             if (housetype > 0) {
                                 url += `housetype=${housetype}&`
                             }
-
-                            if (this.countyId != 0) {
+                            if (this.provId == 0){
+                            	url += `district=510100`
+                            }
+                            else if (this.countyId != 0) {
                                 url += `district=${this.countyId}`
                             } else {
                                 url += `district=${this.cityId}`
+                            }if (this.provId == 0){
+                            	app1.district = 510100
                             }
-                            if (this.countyId == 0){
+                            else if (this.countyId == 0){
 								app1.district = this.cityId;
 							}
 							else {
@@ -260,9 +278,8 @@
                                     app1.count = json.count;
                                     app1.nextPage = json.nextPage;
                                     app1.prevPage = json.prevPage;
+                                    console.log(app1.district)
                                 })
-                        }
-
                     },
 				}
 			})

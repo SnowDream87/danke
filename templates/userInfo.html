@@ -90,7 +90,7 @@
                                 </el-table>
                                 <el-pagination id="pages"
                                     layout="prev, pager, next"
-                                    page-size="5"
+                                    page-size="20"
                                     :total="houseNext.count"
                                     @current-change="houseHandleCurrentChange"
                                     @prev-click="houseLoadData(houseNext.prevPage)"
@@ -98,7 +98,7 @@
                                 </el-pagination>
                             </div>
                         </div>
-                        <div v-if="roleId > 2">
+                        <div v-if="roleId == 4">
                             <p>
                                 <button @click="seeUsers">查看用户</button>&nbsp;&nbsp;&nbsp;&nbsp;
                                 <span v-if="blockUsers"><i class="el-icon-refresh" @click="userRefresh"></i></span>
@@ -144,7 +144,7 @@
                                 </el-table>
                                 <el-pagination id="pages"
                                     layout="prev, pager, next"
-                                    page-size="5"
+                                    page-size="20"
                                     :total="userNext.count"
                                     @current-change="userHandleCurrentChange"
                                     @prev-click="userLoadData(userNext.prevPage)"

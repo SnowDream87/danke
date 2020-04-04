@@ -16,7 +16,7 @@ from rest_framework.viewsets import ModelViewSet
 
 from api.consts import *
 from api.helpers import HouseInfoFilterSet, DefaultResponse, LoginRequiredAuthentication, \
-    RbacPermission
+    RbacPermission, authenticate, has_permission
 from api.serializers import *
 from common.models import District, Agent, HouseType, HouseInfo, User, LoginLog, Role, HouseTag
 from common.utils import to_md5_hex, get_ip_address, gen_mobile_code, send_sms_by_luosimao, upload_stream_to_qiniu
@@ -302,6 +302,8 @@ class HouseInfoViewSet(ModelViewSet):
             'message': '删除成功',
         })
 
+    @authenticate    
+    @has_permission
     def create(self, request, *args, **kwargs):
         tags = request.data.get('tagData')
         serializer = self.get_serializer(data=request.data.get('houseData'))

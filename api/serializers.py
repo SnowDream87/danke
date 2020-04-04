@@ -188,7 +188,7 @@ class UserVerySimpleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('realname', 'userid')
+        fields = ('realname', 'userid', 'tel')
 
 
 class UserSimpleSerializer(serializers.ModelSerializer):

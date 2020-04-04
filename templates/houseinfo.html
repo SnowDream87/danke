@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<meta charset="utf-8">
+		<meta name="referrer" content="no-referrer" charset="utf-8">
 		<title>租房网 - 首页</title>
 		<link rel="stylesheet" href="/static/css/style.css">
         <link rel="stylesheet" href="/static/css/head.css">
@@ -16,7 +16,7 @@
 				<tr v-for="house in houseinfos">
 					<td class="house-thumb">
 						<div>
-							<img :src="house.mainphoto" width="160" height="120" alt="">
+							<img referrer="no-referrer|origin|unsafe-url" :src="house.mainphoto" width="160" height="120" alt="">
 							<span class="count">图</span>
 						</div>
 					</td>
@@ -44,6 +44,10 @@
 						<dd>
 							<span><b>发布时间:</b></span>
 							<span>{{ house.pubdate }}</span>
+						</dd>
+						<dd>
+							<span><b>发布人电话:</b></span>
+							<span>{{ house.user.tel }}</span>
 						</dd>
 					</td>
 				</tr>

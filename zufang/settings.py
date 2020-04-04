@@ -82,7 +82,7 @@ WSGI_APPLICATION = 'zufang.wsgi.application'
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
     # 配置默认页面大小
-    'PAGE_SIZE': 5,
+    'PAGE_SIZE': 20,
     # 配置默认的分页类
     'DEFAULT_PAGINATION_CLASS': 'api.helpers.CustomPagePagination',
     # # 配置默认的过滤和排序类

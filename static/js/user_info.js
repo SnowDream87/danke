@@ -20,6 +20,7 @@ const app = new Vue({
         blockHistory: false,
         blockUsers: false,
         userType: null,
+        token: null,
         userDate: {
             name: null,
             tel: null,
@@ -29,7 +30,8 @@ const app = new Vue({
         }
     },
     created(){
-        let token = $.cookie('token');
+        let token = $.cookie('token')
+        this.token = token
         if (token) {
             let houseInfos = token.split('.')[1];
             let data = JSON.parse(window.atob(houseInfos));
@@ -41,9 +43,10 @@ const app = new Vue({
                 '4': '管理员'
             };
             this.userType = dictionary[this.roleId];
-            fetch(this.url + this.userId)
-                .then(resp => resp.json())
-                .then(json => {
+            fetch(this.url + this.userId, {
+                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'token':this.token},
+                }).then(resp => resp.json())
+                    .then(json => {
                     this.user = json.results[0];
                     this.userDate.name = json.results[0].realname;
                     this.userDate.tel = json.results[0].tel;
@@ -74,7 +77,9 @@ const app = new Vue({
         },
         userLoadData(url) {
             if (url) {
-                fetch(url)
+                fetch(url, {
+                        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'token':this.token},
+                    })
                     .then(resp => resp.json())
                     .then(json => {
                         this.houseNext.count = json.count;
@@ -110,7 +115,9 @@ const app = new Vue({
         },
         seeUsers(){
             this.blockUsers = !this.blockUsers;
-            fetch('/api/users/')
+            fetch('/api/users/',  {
+                        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'token':this.token},
+                })
                 .then(resp => resp.json())
                 .then(json => {
                     this.users = json.results;
@@ -130,7 +137,7 @@ const app = new Vue({
             }).then(resp => resp.json()).then();
             fetch('/api/users/' + this.userId + '/', {
                 method: 'PUT',
-                headers: { 'Accept': 'application/json', 'Content-Type': 'application/json'},
+                headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'token':this.token},
                 body: data,
             }).then(resp => resp.json()).then(json => {
                 this.setCookie(-1);
@@ -152,17 +159,21 @@ const app = new Vue({
                 .then(json => alert(json.message))
         },
         refreshUserData(url){
-            fetch(url)
+            fetch(url,  {
+                        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'token':this.token},
+                })
                 .then(resp => resp.json())
                 .then(json => this.users = json.results)
         },
         refreshHouseInfoData(url){
-            fetch(url + '?user=' + this.userId)
-                .then(resp => resp.json())
-                .then(json => {
-                    this.houseInfos = json.results;
-                    this.houseNext.count = json.count;
-                })
+            if (this.userId){
+                fetch(url + '?user=' + this.userId)
+                    .then(resp => resp.json())
+                    .then(json => {
+                        this.houseInfos = json.results;
+                        this.houseNext.count = json.count;
+                    })
+            }
         },
         sleep(d){
             for(let t = Date.now();Date.now() - t <= d;);

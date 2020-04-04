@@ -1,4 +1,5 @@
-from functools import lru_cache
+import datetime
+from functools import lru_cache, wraps
 
 import jwt
 from django.db.models import Q, Prefetch
@@ -12,6 +13,57 @@ from rest_framework.response import Response
 
 from common.models import HouseInfo, User, Role
 from zufang.settings import SECRET_KEY
+
+
+def authenticate(func):
+
+    @wraps(func)
+    def wrapper(self, request, *args, **kwargs):
+        token = request.META.get('HTTP_TOKEN')
+        if token:
+            try:
+                payload = jwt.decode(token, SECRET_KEY)
+                user = User()
+                user.userid = payload['data']['userid']
+                item = func(self, request, user, *args, **kwargs)
+                print(item)
+                if item:
+                    return Response({
+                        'code': 2000,
+                        'message': '添加成功',
+                    })
+                else:
+                    return Response({
+                        'code': 4003,
+                        'message': '你没有该权限',
+                    })
+
+            except InvalidTokenError:
+                return Response({
+                    'code': 4001,
+                    'message': '无效的令牌或令牌已过期',
+                })
+        return Response({
+            'code': 4002,
+            'message': '请提供有效的身份标识',
+        })
+
+    return wrapper
+
+
+def has_permission(func):
+
+    @wraps(func)
+    def wrapper(self, request, user, *args, **kwargs):
+        privs = get_privs_by_user(user.userid)
+    
+        for priv in privs:
+            if request.method == priv.method and request.path == priv.url:
+                func(self, request, *args, **kwargs)
+                return True
+        return False
+
+    return wrapper
 
 
 class LoginRequiredAuthentication(BaseAuthentication):
