@@ -20,6 +20,7 @@ def authenticate(func):
     @wraps(func)
     def wrapper(self, request, *args, **kwargs):
         token = request.META.get('HTTP_TOKEN')
+        print(token)
         if token:
             try:
                 payload = jwt.decode(token, SECRET_KEY)
@@ -56,8 +57,8 @@ def has_permission(func):
     @wraps(func)
     def wrapper(self, request, user, *args, **kwargs):
         privs = get_privs_by_user(user.userid)
-    
         for priv in privs:
+            print(request.method == priv.method and request.path == priv.url)
             if request.method == priv.method and request.path == priv.url:
                 func(self, request, *args, **kwargs)
                 return True

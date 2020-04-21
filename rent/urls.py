@@ -15,7 +15,7 @@ Including another URLconf
 """
 
 from django.urls import path
-from rent.views import login, register, publish, index, user_info, house_info
+from rent.views import *
 
 app_name = 'rent'
 
@@ -25,5 +25,8 @@ urlpatterns = [
     path('register/', register, name='register'),
     path('publish/', publish, name='publish'),
     path('userinfo/', user_info, name='userinfo'),
+    path('userinfo/profile/', profile_info, name='profile'),
+    path('userinfo/password/', password, name='password'),
+    path('userinfo/house/', update_house, name='house'),
     path('houseinfo/<int:houseid>', house_info, name='houseinfo'),
 ]

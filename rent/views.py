@@ -25,6 +25,18 @@ def user_info(request):
     return render(request, 'userInfo.html')
 
 
+def profile_info(request):
+    return render(request, 'profile.html')
+
+
+def password(request):
+    return render(request, 'password.html')
+
+
+def update_house(request):
+    return render(request, 'updateHouse.html')
+
+
 def house_info(request, houseid):
     return render(request, 'houseinfo.html', {houseid:houseid})
 

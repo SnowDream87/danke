@@ -185,5 +185,14 @@ const app = new Vue({
             let expires = "; expires="+date.toGMTString();
             document.cookie = "token=" + token + expires + "; path=/";
         },
+        handleOpen(key, keyPath) {
+            console.log(key, keyPath);
+        },
+        handleClose(key, keyPath) {
+            console.log(key, keyPath);
+        }
     }
 });
+
+
+

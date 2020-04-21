@@ -13,6 +13,24 @@
         {% verbatim %}
         <div id="app" v-cloak class="main wrap">
             <table class="house-list">
+                <el-row>
+                    <el-col :span="12">
+                        <el-menu
+                          default-active="2"
+                          class="el-menu-vertical-demo"
+                          @open="handleOpen"
+                          @close="handleClose">
+                          <el-submenu index="1">
+                            <template slot="title">
+                              <i class="el-icon-setting"></i>
+                              <span>基本信息</span>
+                            </template>
+                            <el-menu-item-group>
+                              <el-menu-item index="1-1"><a href="/rent/userinfo/profile/" style="text-decoration:none;color: black">个人资料修改</a></el-menu-item>
+                              <el-menu-item index="1-2"><a href="/rent/userinfo/password/" style="text-decoration:none;color: black">密码修改</a></el-menu-item>
+                        </el-menu>
+                    </el-col>
+                </el-row>
                 <tr v-for="user">
                     <td>
                         <dl>
@@ -33,7 +51,7 @@
                                 <span>{{ user.lastvisit }}</span>
                             </dd>
                             <dd id="register">
-                                <span>{{ userType }}</span>&nbsp;
+                                <b><span>{{ userType }}</span></b>&nbsp;
                                 <span v-if="roleId == 1">
                                     <button @click="registerAgent">经理人注册</button>
                                 </span>
@@ -49,7 +67,7 @@
                                     <el-table-column
                                         prop="houseid"
                                         label="编号"
-                                        width="50" >
+                                        width="80" >
                                     </el-table-column>
                                     <el-table-column
                                         prop="title"
@@ -86,6 +104,12 @@
                                             label="删除"
                                             width="50">
                                         <i class="el-icon-delete" @click="historyDeleted"></i>
+                                    </el-table-column>
+                                     <el-table-column
+                                            prop="houseid"
+                                            label="修改"
+                                            width="50">
+                                        <i class="el-icon-edit" @click="historyEdit"></i>
                                     </el-table-column>
                                 </el-table>
                                 <el-pagination id="pages"
@@ -155,6 +179,7 @@
                     </td>
                 </tr>
             </table>
+
             <a href="/rent/index/">首页</a>
         </div>
         {% endverbatim %}
@@ -162,7 +187,220 @@
         <script src="https://cdn.bootcss.com/vue/2.6.10/vue.min.js"></script>
         <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
         <script src="//cdn.bootcss.com/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
-        <script src="https://unpkg.com/element-ui/lib/index.js"></script>
-        <script src="/static/js/user_info.js"></script>
+        <script src="https://unpkg.com/element-ui/lib/index.js"></script>    
+        <script>
+            const app = new Vue({
+                el: '#app',
+                data: {
+                    housePage: 1,
+                    userPage:1,
+                    houseNext:{
+                        count: 0,
+                        nextPage: null,
+                        prevPage: null,
+                    },
+                    userNext:{
+                        count: 0,
+                        nextPage: null,
+                        prevPage: null,
+                    },
+                    url: '/api/users/',
+                    userId: null,
+                    user: [],
+                    roleId: null,
+                    houseInfos:[],
+                    users: [],
+                    blockHistory: false,
+                    blockUsers: false,
+                    userType: null,
+                    token: null,
+                    userDate: {
+                        name: null,
+                        tel: null,
+                        servstar: 0,
+                        realstar: 0,
+                        profstar: 0
+                    }
+                },
+                created(){
+                    let token = $.cookie('token')
+                    this.token = token
+                    if (token) {
+                        let useInfos = token.split('.')[1];
+                        let data = JSON.parse(window.atob(useInfos));
+                        this.userId = data.data.userid;
+                        this.roleId = data.data.roleid;
+                        let dictionary = {
+                            '1': '普通用户',
+                            '2': '经理人',
+                            '4': '管理员'
+                        };
+                        this.userType = dictionary[this.roleId];
+                        fetch(this.url + this.userId, {
+                                headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'token':this.token},
+                            }).then(resp => resp.json())
+                                .then(json => {
+                                this.user = json.results[0];
+                                this.userDate.name = json.results[0].realname;
+                                this.userDate.tel = json.results[0].tel;
+                            })
+                    }
+                    else {
+                        location.href = '/rent/login/'
+                    }
+                },
+                methods:{
+                    houseHandleCurrentChange(currentPage){
+                        this.housePage = currentPage
+                        this.houseLoadData('/api/houseinfos/?page=' + currentPage)
+                    },
+                    houseLoadData(url) {
+                        if (url) {
+                            fetch(url + '&user=' + this.userId)
+                                .then(resp => resp.json())
+                                .then(json => {
+                                    this.houseNext.count = json.count;
+                                    this.houseNext.nextPage = json.next;
+                                    this.houseNext.prevPage = json.previous;
+                                    this.houseInfos = json.results;
+                                })
+                        }
+                    },
+                    userHandleCurrentChange(currentPage){
+                        this.userPage = currentPage
+                        this.userLoadData('/api/users/?page=' + currentPage)
+                    },
+                    userLoadData(url) {
+                        if (url) {
+                            fetch(url, {
+                                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'token':this.token},
+                                })
+                                .then(resp => resp.json())
+                                .then(json => {
+                                    this.houseNext.count = json.count;
+                                    this.houseNext.nextPage = json.next;
+                                    this.houseNext.prevPage = json.previous;
+                                    this.houseInfos = json.results;
+                                })
+                        }
+                    },
+                    history(){
+                        this.blockHistory = !this.blockHistory;
+                        fetch('/api/houseinfos/?page=' + this.housePage + '&user=' + this.userId)
+                            .then(resp => resp.json())
+                            .then(json => {
+                                this.houseInfos = json.results;
+                                this.houseNext.count = json.count;
+                                this.houseNext.nextPage = json.next;
+                                this.houseNext.prevPage = json.previous;
+                            });
+                    },
+                    historyDeleted(e){
+                        let el = e.currentTarget.parentElement.parentElement.parentElement.firstChild.firstChild.textContent;
+                        let url = '/api/houseinfos/';
+                        this.selectData(el, url);
+                        this.sleep(500);
+                        this.refreshHouseInfoData(url);
+                    },
+                    historyEdit(e){
+                        let el = e.currentTarget.parentElement.parentElement.parentElement.firstChild.firstChild.textContent;
+                        let date = new Date();
+                        date.setTime(date.getTime() + (1000 * 1000));
+                        let expires = "; expires=" + date.toGMTString();
+                        document.cookie = "houseId=" + el + expires + "; path=/";
+                        location.href = '/rent/userinfo/house'
+                    },
+                    userDeleted(e){
+                        let el = e.currentTarget.parentElement.parentElement.parentElement.firstChild.firstChild.textContent;
+                        let url = '/api/users/';
+                        this.selectData(el, url);
+                        this.refreshUserData(url);
+                    },
+                    seeUsers(){
+                        this.blockUsers = !this.blockUsers;
+                        fetch('/api/users/?page=' + this.userPage,  {
+                                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'token':this.token},
+                            })
+                            .then(resp => resp.json())
+                            .then(json => {
+                                this.users = json.results;
+                                this.userNext.count = json.count;
+                                this.userNext.nextPage = json.next;
+                                this.userNext.prevPage = json.previous;
+                            })
+                    },
+                    registerAgent(){
+                        let agentData = JSON.stringify(this.userDate);
+                        console.log(agentData);
+                        let data = JSON.stringify({"role_user": true});
+                        fetch('/api/agents/', {
+                            method: 'POST',
+                            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json'},
+                            body: agentData,
+                        }).then(resp => resp.json()).then();
+                        fetch('/api/users/' + this.userId + '/', {
+                            method: 'PUT',
+                            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'token':this.token},
+                            body: data,
+                        }).then(resp => resp.json()).then(json => {
+                            this.setCookie(-1);
+                            alert(json.message + '请重新登录');
+                            location.href = '/rent/login/'
+                        })
+                    },
+                    userRefresh(){
+                        let url = '/api/users/?page=' + this.userPage;
+                        this.refreshUserData(url);
+                    },
+                    houseRefresh(){
+                        let url = '/api/houseinfos/?page=' + this.housePage;
+                        this.refreshHouseInfoData(url);
+                    },
+                    selectData(el, url){
+                        fetch(url + el + '/', {method: 'PUT'})
+                            .then(resp => resp.json())
+                            .then(json => alert(json.message))
+                    },
+                    refreshUserData(url){
+                        fetch(url,  {
+                                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'token':this.token},
+                            })
+                            .then(resp => resp.json())
+                            .then(json => this.users = json.results)
+                    },
+                    refreshHouseInfoData(url){
+                        if (this.userId){
+                            fetch(url + '&user=' + this.userId)
+                                .then(resp => resp.json())
+                                .then(json => {
+                                    this.houseInfos = json.results;
+                                    this.houseNext.count = json.count;
+                                })
+                        }
+                    },
+                    sleep(d){
+                        for(let t = Date.now();Date.now() - t <= d;);
+                    },
+                    setCookie(days){
+                        let token = $.cookie('token');
+                        let date = new Date();
+                        date.setTime(date.getTime()+(1000 * 86400 * days));
+                        let expires = "; expires="+date.toGMTString();
+                        document.cookie = "token=" + token + expires + "; path=/";
+                    },
+                    handleOpen(key, keyPath) {
+                        console.log(key, keyPath);
+                    },
+                    handleClose(key, keyPath) {
+                        console.log(key, keyPath);
+                    }
+                }
+            });
+
+
+
+
+        </script>
     </body>
+
 </html>

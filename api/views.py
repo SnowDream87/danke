@@ -2,6 +2,7 @@ import datetime
 import random
 import os
 import time
+from common.utils import to_md5_hex
 
 import jwt
 from django.utils import timezone
@@ -294,13 +295,26 @@ class HouseInfoViewSet(ModelViewSet):
         })
 
     def update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        instance.status = False
-        instance.save()
-        return Response({
-            'code': 2000,
-            'message': '删除成功',
-        })
+        data = request.data
+        print(111)
+        if data:
+            houseDate = request.data.get('houseData')
+            with atomic():
+                house_info = HouseInfo.objects.filter(houseid=kwargs['pk'])
+                house_info.update(**houseDate)
+                res = Response({
+                    'code': 2000,
+                    'message': '修改成功',
+                })
+        else:
+            instance = self.get_object()
+            instance.status = False
+            instance.save()
+            res = Response({
+                'code': 2000,
+                'message': '删除成功',
+            })
+        return res
 
     @authenticate    
     @has_permission
@@ -316,8 +330,8 @@ class HouseInfoViewSet(ModelViewSet):
             with atomic():
                 house = serializer.save()
                 houseid = house.houseid
-                for tagid in tags.get('tagId'):
-                    HouseTag.objects.create(house_id=houseid, tag_id=tagid)
+                for tag_id in tags.get('tagId'):
+                    HouseTag.objects.create(house_id=houseid, tag_id=tag_id)
             resp = Response({
                 'code': 2000,
                 'message': '添加成功',
@@ -334,7 +348,7 @@ class UserViewSet(ModelViewSet):
     """用户模型集视图"""
     queryset = User.objects.filter(status=True).all()
     authentication_classes = (LoginRequiredAuthentication,)
-    permission_classes = (RbacPermission,)
+    # permission_classes = (RbacPermission,)
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -360,12 +374,35 @@ class UserViewSet(ModelViewSet):
             })
         # 修改用户信息
         if data:
-            user = User.objects.update(*data)
-            user.save()
-            res = Response({
-                'code': 2000,
-                'message': '修改成功',
-            })
+            if data.get('password'):
+                password = data.get('password')
+                old_password = data.get('oldPassword')
+                print(password, old_password)
+                user = User.objects.filter(userid=kwargs['pk']).first()
+                print(user.password, to_md5_hex(old_password))
+                if user.password == to_md5_hex(old_password):
+                    user.password = to_md5_hex(password)
+                    user.save()
+                    res = Response({
+                        'code': 2000,
+                        'message': '密码修改成功',
+                    })
+                else:
+                    res = Response({
+                        'code': 4000,
+                        'message': '密码不正确',
+                    })
+                return res
+
+            else:
+                user = User.objects.filter(userid=kwargs['pk'])
+                user.update(**data)
+                res = Response({
+                    'code': 2000,
+                    'message': '修改成功',
+                })
+                print(res)
+            return res
         # 删除用户
         else:
             instance = self.get_object()

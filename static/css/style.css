@@ -122,7 +122,7 @@ a:link, a:visited, a:hover, a:active { color:#3a52a8; text-decoration:underline;
 #regLogin dl dt { padding-left:10px; padding-right:30px; }
 #regLogin dl dd { padding:0 50px; background:#eee; color:#666; border-left:1px solid #fff; }
 #regLogin dl dd.past { background:rgb(180,0,5); color:#fff; }
-#regLogin .dialog .box table { width:600px; margin:0 auto; }
+#regLogin .dialog .box table { width:500px; margin:0 auto; }
 #regLogin .dialog .box .infos { padding:40px 0; }
 #regLogin .dialog .box .buttons input { background-color:rgb(180,0,5); outline: none; border:none; width:125px; height:36px; font-size:14px; font-weight:bold; color:#fff; }
 #regLogin .dialog .verycode { width:130px; }

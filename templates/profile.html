@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>租房网 - 个人资料</title>
+        <link rel="stylesheet" href="/static/css/style.css">
+        <link rel="stylesheet" href="/static/css/head.css">
+        <link rel="stylesheet" href="/static/css/add_style.css">
+    </head>
+    <body>
+        {% include 'header.html' %}
+        <div id="regLogin" class="wrap">
+            <div class="dialog">
+                <dl class="clearfix">
+                    <dd class="past">修改个人信息</dd>
+                </dl>
+                <div class="box">
+                    <form id="registerForm">
+                        {% csrf_token %}
+                        <div class="infos">
+                            <table class="field">
+                                <tr>
+                                    <td class="field">用 户 名：</td>
+                                    <td>
+                                        <input id="username" type="text" class="text" v-model="form.username" name="username">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="field">真实姓名：</td>
+                                    <td>
+                                        <input type="text" class="text" v-model="form.realname" name="realname">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="field">电子邮箱：</td>
+                                    <td>
+                                        <input type="email" class="text" v-model="form.email" name="email">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="field">性 别：</td>
+                                    <td>
+                                        <label><input type="radio" name="sex" v-model="form.sex" value='1'>男</label>&nbsp;&nbsp;&nbsp;&nbsp;
+                                        <label><input type="radio" name="sex" v-model="form.sex" value='0'>女</label>
+                                    </td>
+                                </tr>
+                                
+                    
+                            </table>
+                            <div class="buttons">
+                                <input type="button" value="修改" @click="onUpdate">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% include 'footer.html' %}
+        </div>
+        <script src="/static/js/profile.js"></script>
+    </body>
+</html>
