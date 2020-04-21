@@ -252,8 +252,8 @@ class HouseTypeViewSet(ModelViewSet):
 #         return EstateDetailSerializer if self.action == 'retrieve' else EstateSimpleSerializer
 
 
-# @method_decorator(decorator=cache_page(timeout=60), name='list')
-# @method_decorator(decorator=cache_page(timeout=60), name='retrieve')
+@method_decorator(decorator=cache_page(timeout=60), name='list')
+@method_decorator(decorator=cache_page(timeout=60), name='retrieve')
 class HouseInfoViewSet(ModelViewSet):
     """房源信息视图集"""
     queryset = HouseInfo.objects.filter(status=True).all()
@@ -296,7 +296,6 @@ class HouseInfoViewSet(ModelViewSet):
 
     def update(self, request, *args, **kwargs):
         data = request.data
-        print(111)
         if data:
             houseDate = request.data.get('houseData')
             with atomic():
@@ -347,9 +346,10 @@ class HouseInfoViewSet(ModelViewSet):
 class UserViewSet(ModelViewSet):
     """用户模型集视图"""
     queryset = User.objects.filter(status=True).all()
-    authentication_classes = (LoginRequiredAuthentication,)
+    # authentication_classes = (LoginRequiredAuthentication,)
     # permission_classes = (RbacPermission,)
 
+    @authenticate
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
@@ -359,6 +359,7 @@ class UserViewSet(ModelViewSet):
             'results': [serializer.data]
         })
 
+    @authenticate
     def update(self, request, *args, **kwargs):
         data = request.data
 
@@ -401,7 +402,7 @@ class UserViewSet(ModelViewSet):
                     'code': 2000,
                     'message': '修改成功',
                 })
-                print(res)
+                
             return res
         # 删除用户
         else:

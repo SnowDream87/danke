@@ -20,24 +20,12 @@ def authenticate(func):
     @wraps(func)
     def wrapper(self, request, *args, **kwargs):
         token = request.META.get('HTTP_TOKEN')
-        print(token)
         if token:
             try:
                 payload = jwt.decode(token, SECRET_KEY)
                 user = User()
                 user.userid = payload['data']['userid']
-                item = func(self, request, user, *args, **kwargs)
-                print(item)
-                if item:
-                    return Response({
-                        'code': 2000,
-                        'message': '添加成功',
-                    })
-                else:
-                    return Response({
-                        'code': 4003,
-                        'message': '你没有该权限',
-                    })
+                return func(self, request, user, *args, **kwargs)
 
             except InvalidTokenError:
                 return Response({
@@ -61,8 +49,12 @@ def has_permission(func):
             print(request.method == priv.method and request.path == priv.url)
             if request.method == priv.method and request.path == priv.url:
                 func(self, request, *args, **kwargs)
-                return True
-        return False
+                return func(self, request, *args, **kwargs)
+
+        return Response({
+            'code': 4003,
+            'message': '你没有该权限',
+        })
 
     return wrapper
 

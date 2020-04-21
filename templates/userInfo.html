@@ -240,9 +240,10 @@
                                 headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'token':this.token},
                             }).then(resp => resp.json())
                                 .then(json => {
-                                this.user = json.results[0];
-                                this.userDate.name = json.results[0].realname;
-                                this.userDate.tel = json.results[0].tel;
+                                    console.log(json)
+                                    this.user = json.results[0];
+                                    this.userDate.name = json.results[0].realname;
+                                    this.userDate.tel = json.results[0].tel;
                             })
                     }
                     else {
