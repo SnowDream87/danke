@@ -46,11 +46,8 @@ def has_permission(func):
     def wrapper(self, request, user, *args, **kwargs):
         privs = get_privs_by_user(user.userid)
         for priv in privs:
-            print(request.method == priv.method and request.path == priv.url)
             if request.method == priv.method and request.path == priv.url:
-                func(self, request, *args, **kwargs)
                 return func(self, request, *args, **kwargs)
-
         return Response({
             'code': 4003,
             'message': '你没有该权限',

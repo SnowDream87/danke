@@ -358,7 +358,10 @@
                         this.refreshHouseInfoData(url);
                     },
                     selectData(el, url){
-                        fetch(url + el + '/', {method: 'PUT'})
+                        fetch(url + el + '/', {
+                            method: 'PUT',
+                            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'token': this.token},
+                        })
                             .then(resp => resp.json())
                             .then(json => alert(json.message))
                     },

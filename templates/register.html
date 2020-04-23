@@ -91,9 +91,7 @@
                         fetch('/api/mobile/' + this.form.tel)
                             .then(resp => resp.json())
                             .then(json => {
-                                if (json.code != 100001) {
-                                    alert(json.message)
-                                }
+                                alert(json.message)
                             });
                     },
                     onRegister(){
@@ -103,11 +101,12 @@
                             headers: { 'Accept': 'application/json', 'Content-Type': 'application/json'},
                             body: formData
                         }).then(resp => resp.json()).then(json => {
-                            if (this.json.code == 2000){
-                                alert(json.message)
+                            if (!json.non_field_errors){
+                                alert("注册成功")
+                                location.href = '/rent/login'
                             }
                             else {
-                                alert(json.message)
+                                alert(json.non_field_errors[0])
                             }
                         });
                     }

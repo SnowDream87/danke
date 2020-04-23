@@ -15,6 +15,7 @@
                     <h4>用户登录</h4>
                     <form id="loginForm" action="" method="post">
                         {% csrf_token %}
+                        {% verbatim %}
                          <div class="infos">
                             <table class="field">
                                 <tr>
@@ -31,19 +32,15 @@
                                         <span id="perror"></span>
                                     </td>
                                 </tr>
-                                <!-- <tr>
-                                    <td class="field"><label for="captcha">验 证 码：</label></td>
-                                    <td>
-                                        <input id="captcha" type="text" class="text" name="captcha">
-                                        <img id="captchaImage" src="/captcha/" width="80" height="30">
-                                    </td>
-                                </tr> -->
+                                
                             </table>
                             <div class="buttons">
                                 <input type="button" value="立即登录" @click="onLogin">
                                 <input id="regBtn" type="button" value="快速注册" >
+                                <p v-model='message' style="color: red; padding: 20px">{{message}}</p>
                             </div>
                         </div>
+                        {% endverbatim %}
                     </form>
                 </div>
             </div>
@@ -65,25 +62,29 @@
                 },
                 methods:{
                     onLogin(){
-                        let formData = JSON.stringify(this.form);
-                        console.log(formData);
-                        fetch(this.url, {
-                            method:"POST",
-                            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json'},
-                            body: formData
-                        }).then(resp => resp.json()).then(json => {
-                            if (json.code == 200001){
-                                let token = json.token;
-                                let date = new Date();
-                                date.setTime(date.getTime() + (1000 * 86400));
-                                let expires = "; expires=" + date.toGMTString();
-                                document.cookie = "token=" + token + expires + "; path=/";
-                                location.href = '/rent/index'
-                            }
-                            else {
-                                alert(json.message)
-                            }
-                        });
+                        console.log(this.form.username)
+                        if (this.form.username) {
+                            let formData = JSON.stringify(this.form);
+                            fetch(this.url, {
+                                method:"POST",
+                                headers: { 'Accept': 'application/json', 'Content-Type': 'application/json'},
+                                body: formData
+                            }).then(resp => resp.json()).then(json => {
+                                if (json.code == 200001){
+                                    let token = json.token;
+                                    let date = new Date();
+                                    date.setTime(date.getTime() + (1000 * 86400));
+                                    let expires = "; expires=" + date.toGMTString();
+                                    document.cookie = "token=" + token + expires + "; path=/";
+                                    location.href = '/rent/index'
+                                }
+                                else {
+                                    this.message = json.message
+                                }
+                            });
+                        } else {
+                            this.message = '用户名和密码不能为空！'
+                        }
                     },
 
                 }

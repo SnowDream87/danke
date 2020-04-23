@@ -225,7 +225,7 @@
                             method: "POST",
                             headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'token': this.token},
                             body: data
-                        }).then(resp => resp.json()).then(json => console.log(json.message))
+                        }).then(resp => resp.json()).then(json => alert(json.message))
                     }
 
                 }

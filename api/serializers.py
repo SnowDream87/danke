@@ -226,6 +226,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
                                    Q(email=attrs['email']))
         if user:
             raise ValidationError(('用户名、手机或邮箱已被注册', 'invalid'))
+
         return attrs
 
     def create(self, validated_data):

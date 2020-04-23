@@ -1,8 +1,6 @@
 const regLogin = new Vue({
     el: '#registerForm',
     data:{
-        againMessage: null,
-        newMessage: null,
         message: null,
         userid: null,
         token: null,
@@ -16,6 +14,7 @@ const regLogin = new Vue({
         let token = $.cookie('token')
         this.token = token
         if (token) {
+            
             let useInfos = token.split('.')[1];
             let data = JSON.parse(window.atob(useInfos));
             this.userid = data.data.userid; 
@@ -24,8 +23,6 @@ const regLogin = new Vue({
     methods:{
         onUpdate(){
             this.message = null;
-            this.newMessage = null;
-            this.againMessage = null;
             let formData = JSON.stringify(this.form);
             if (this.form.password.length >= 6) {
                 if (this.form.password == this.againPassword) {
@@ -45,13 +42,14 @@ const regLogin = new Vue({
                     });
                 }
                 else {
-                    this.againMessage = "确认密码与新密码不一致"
+                    this.message = "确认密码与新密码不一致"
+                    console.log(this.message)
                 }
             }
             else {
-                this.newMessage = "新密码长度应大于等于6位"
+                this.message = "新密码长度应大于等于6位"
             }
-            
+ 
         },
         setCookie(days){
                 let token = $.cookie('token');

@@ -378,9 +378,7 @@ class UserViewSet(ModelViewSet):
             if data.get('password'):
                 password = data.get('password')
                 old_password = data.get('oldPassword')
-                print(password, old_password)
                 user = User.objects.filter(userid=kwargs['pk']).first()
-                print(user.password, to_md5_hex(old_password))
                 if user.password == to_md5_hex(old_password):
                     user.password = to_md5_hex(password)
                     user.save()
